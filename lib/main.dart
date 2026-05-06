@@ -234,9 +234,26 @@ class LanguageSelectionPage extends StatelessWidget {
 }
 
 // --- WELCOME SELECTION PAGE ---
-class WelcomeSelectionPage extends StatelessWidget {
+class WelcomeSelectionPage extends StatefulWidget {
   final bool isEnglish;
   const WelcomeSelectionPage({super.key, required this.isEnglish});
+
+  @override
+  State<WelcomeSelectionPage> createState() => _WelcomeSelectionPageState();
+}
+
+class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
+  int _welcomeTapCount = 0;
+  bool _showAdminLogin = false;
+
+  void _handleWelcomeTap() {
+    setState(() {
+      _welcomeTapCount++;
+      if (_welcomeTapCount >= 3) {
+        _showAdminLogin = true;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +272,7 @@ class WelcomeSelectionPage extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const LanguageSelectionPage())), 
                     icon: const Icon(Icons.arrow_back, size: 28), 
-                    label: Text(isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
+                    label: Text(widget.isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
                   ),
                   IconButton(
                     icon: const Icon(Icons.admin_panel_settings, color: Colors.blueGrey, size: 32),
@@ -268,26 +285,30 @@ class WelcomeSelectionPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                  GestureDetector(
+                    onTap: _handleWelcomeTap,
+                    child: Text(widget.isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                  ),
                   const SizedBox(height: 10),
-                  Text(isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
+                  Text(widget.isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
                   const SizedBox(height: 50),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 40,
+                    runSpacing: 20,
                     children: [
                       _buildSelectionCard(
                         context,
-                        title: isEnglish ? "Student Login" : "Log Masuk Pelajar",
-                        desc: isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
+                        title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
+                        desc: widget.isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
                         icon: Icons.school,
                         iconBgColor: const Color(0xFF1B64F2),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: isEnglish)))
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))
                       ),
-                      const SizedBox(width: 40),
                       _buildSelectionCard(
                         context,
-                        title: isEnglish ? "Guest Login" : "Log Masuk Tetamu",
-                        desc: isEnglish ? "Continue as guest but\nwith limited access" : "Teruskan sebagai tetamu tetapi\ndengan akses terhad",
+                        title: widget.isEnglish ? "Guest Login" : "Log Masuk Tetamu",
+                        desc: widget.isEnglish ? "Continue as guest but\nwith limited access" : "Teruskan sebagai tetamu tetapi\ndengan akses terhad",
                         icon: Icons.person_outline,
                         iconBgColor: const Color(0xFF3B445B),
                         onTap: () async {
@@ -297,7 +318,7 @@ class WelcomeSelectionPage extends StatelessWidget {
                           try {
                             await FirebaseDatabase.instance.ref('login_record').push().set({
                               'patient_id': uniqueGuestId,
-                              'patient_name': isEnglish ? "GUEST" : "TETAMU",
+                              'patient_name': widget.isEnglish ? "GUEST" : "TETAMU",
                               'is_guest': true,
                               'timestamp': ServerValue.timestamp,
                               'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
@@ -311,25 +332,109 @@ class WelcomeSelectionPage extends StatelessWidget {
                           Navigator.pushAndRemoveUntil(
                             context, 
                             MaterialPageRoute(builder: (c) => KioskDashboard(
-                              userName: isEnglish ? "GUEST" : "TETAMU",
+                              userName: widget.isEnglish ? "GUEST" : "TETAMU",
                               userId: uniqueGuestId,
                               isGuest: true,
-                              isEnglish: isEnglish,
+                              isEnglish: widget.isEnglish,
                             )), 
                             (r) => false
                           );
                         }
                       ),
+                      if (_showAdminLogin)
+                        _buildSelectionCard(
+                          context,
+                          title: widget.isEnglish ? "Admin Sign In" : "Log Masuk Admin",
+                          desc: widget.isEnglish ? "Manual login for\ntesting and admin" : "Log masuk manual untuk\nujian dan admin",
+                          icon: Icons.admin_panel_settings,
+                          iconBgColor: Colors.orange.shade700,
+                          onTap: _showAdminLoginDialog,
+                        ),
                     ],
                   )
                 ],
               ),
             ),
-            Center(child: EmergencyHelpButton(isEnglish: isEnglish)),
+            Center(child: EmergencyHelpButton(isEnglish: widget.isEnglish)),
           ],
         ),
       ),
     );
+  }
+
+  void _showAdminLoginDialog() {
+    TextEditingController idController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(widget.isEnglish ? "Admin Sign In (Test Mode)" : "Log Masuk Admin (Mod Ujian)"),
+        content: TextField(
+          controller: idController,
+          decoration: InputDecoration(
+            hintText: widget.isEnglish ? "Enter Student/Admin ID" : "Masukkan ID Pelajar/Admin",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: Text(widget.isEnglish ? "Cancel" : "Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              String id = idController.text.trim();
+              if (id.isNotEmpty) {
+                Navigator.pop(c);
+                _performManualLogin(id);
+              }
+            },
+            child: Text(widget.isEnglish ? "Login" : "Log Masuk"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performManualLogin(String studentId) async {
+    showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
+    try {
+      var studentEvent = await FirebaseDatabase.instance.ref('kiosk/students').child(studentId).once();
+      if (!mounted) return;
+      Navigator.pop(context); // pop loading
+
+      String userName = "TEST ADMIN";
+      if (studentEvent.snapshot.exists) {
+        var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;
+        userName = data['name'] ?? userName;
+      }
+        
+      try {
+        await FirebaseDatabase.instance.ref('login_record').push().set({
+          'patient_id': studentId,
+          'patient_name': userName,
+          'is_guest': false,
+          'timestamp': ServerValue.timestamp,
+          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
+        });
+      } catch (e) {
+        debugPrint("Failed to record manual login: $e");
+      }
+
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context, 
+        MaterialPageRoute(builder: (context) => KioskDashboard(
+          userName: userName,
+          userId: studentId,
+          isGuest: false,
+          isEnglish: widget.isEnglish,
+        )),
+        (r) => false
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // pop loading
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   Widget _buildSelectionCard(BuildContext context, {required String title, required String desc, required IconData icon, required Color iconBgColor, required VoidCallback onTap}) {
@@ -361,7 +466,7 @@ class WelcomeSelectionPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(isEnglish ? "Continue" : "Teruskan", style: TextStyle(color: iconBgColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(widget.isEnglish ? "Continue" : "Teruskan", style: TextStyle(color: iconBgColor, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 5),
                 Icon(Icons.arrow_forward, color: iconBgColor, size: 20),
               ],
@@ -640,6 +745,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
 
   // Equipment Form Controllers
   String? _selectedEquip;
+  String? _selectedQuantity;
   String? _selectedLoanReason;
   final GlobalKey<FormState> _equipFKey = GlobalKey<FormState>();
 
@@ -657,8 +763,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
     ? ['Post-Surgery Recovery', 'Chronic Condition', 'Temporary Injury', 'Follow-up Treatment', 'Other']
     : ['Pemulihan Selepas Pembedahan', 'Keadaan Kronik', 'Kecederaan Sementara', 'Rawatan Susulan', 'Lain-lain'];
   List<String> get _equipList => widget.isEnglish
-    ? ["Wheelchair", "Crutches", "Nebulizer"]
-    : ["Kerusi Roda", "Tongkat", "Nebulizer"];
+    ? ["Wheelchair", "Crutches", "Nebulizer", "First Aid Kit", "Anatomical Model", "Digital Thermometer", "Blood Pressure Cuff"]
+    : ["Kerusi Roda", "Tongkat", "Nebulizer", "Peti Pertolongan Cemas", "Model Anatomi", "Termometer Digital", "Alat Tekanan Darah"];
 
   // --- IDLE TIMEOUT LOGIC ---
   Timer? _idleTimer;
@@ -726,6 +832,82 @@ class _KioskDashboardState extends State<KioskDashboard> {
     }
     // Route back to the initial Selection Screen
     Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (c) => const LanguageSelectionPage()), (r) => false);
+  }
+
+  bool _checkIsClinicOpen() {
+    DateTime now = DateTime.now();
+    if (now.weekday >= 6) return false;
+
+    if (now.weekday == 5) {
+      int weekOfMonth = ((now.day - 1) / 7).floor() + 1;
+      if (weekOfMonth == 2 || weekOfMonth == 4) return false;
+
+      if (now.hour >= 8 && (now.hour < 12 || (now.hour == 12 && now.minute <= 15))) {
+        return true;
+      } else if ((now.hour == 14 && now.minute >= 45) || (now.hour >= 15 && now.hour < 17)) {
+        return true;
+      }
+      return false;
+    }
+
+    if ((now.hour >= 8 && now.hour < 13) || (now.hour >= 14 && now.hour < 17)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  void _goToWalkIn() {
+    _expireOldAndSkippedTickets();
+    setState(() => _currentView = "WALK_IN_TRIAGE");
+  }
+
+  Future<void> _expireOldAndSkippedTickets() async {
+    DateTime now = DateTime.now();
+    DateTime startOfToday = DateTime(now.year, now.month, now.day);
+    int startOfTodayMs = startOfToday.millisecondsSinceEpoch;
+    bool isClinicOpen = _checkIsClinicOpen();
+
+    try {
+      var q = await FirebaseDatabase.instance.ref('walk_ins').once();
+      if (!q.snapshot.exists) return;
+      var map = q.snapshot.value as Map<dynamic, dynamic>;
+
+      map.forEach((catKey, catData) {
+        if (catData is Map) {
+          int currentServingQn = 0;
+          List todayServingOrCompleted = [];
+
+          catData.forEach((key, v) {
+            if (v is Map && (v['timestamp'] ?? 0) >= startOfTodayMs) {
+              if (v['status'] == 'Serving' || v['status'] == 'Completed') {
+                todayServingOrCompleted.add(v);
+              }
+            }
+          });
+
+          // Sort descending by timestamp to find the latest
+          todayServingOrCompleted.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+          if (todayServingOrCompleted.isNotEmpty) {
+            currentServingQn = int.tryParse(todayServingOrCompleted.first['queue_number'].toString()) ?? 0;
+          }
+
+          catData.forEach((key, v) {
+            if (v is Map && v['status'] == 'Waiting') {
+              bool isOld = (v['timestamp'] ?? 0) < startOfTodayMs;
+              int qn = int.tryParse(v['queue_number'].toString()) ?? 0;
+              bool isSkipped = currentServingQn > 0 && qn > 0 && qn < currentServingQn;
+
+              if (isOld || isSkipped || !isClinicOpen) {
+                FirebaseDatabase.instance.ref('walk_ins').child(catKey.toString()).child(key.toString()).update({'status': 'Expired'});
+              }
+            }
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint("Error expiring old/skipped tickets: $e");
+    }
   }
 
   Widget _getContent() {
@@ -799,7 +981,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         const SizedBox(width: 30),
                         Expanded(
                           flex: 2, 
-                          child: _buildMenuCard(Icons.directions_walk, widget.isEnglish ? 'WALK-IN' : 'WALK-IN (TIDAK\nBERJADUAL)', () => setState(() => _currentView = "WALK_IN_TRIAGE"))
+                          child: _buildMenuCard(Icons.directions_walk, widget.isEnglish ? 'WALK-IN' : 'WALK-IN (TIDAK\nBERJADUAL)', _goToWalkIn)
                         ),
                         const Spacer(flex: 1), 
                       ],
@@ -884,7 +1066,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _osiCard("WALK-IN", Icons.directions_walk, onTap: () => setState(() => _currentView = "WALK_IN_TRIAGE")),
+                  _osiCard("WALK-IN", Icons.directions_walk, onTap: _goToWalkIn),
                   if (!widget.isGuest) ...[
                     const SizedBox(width: 40),
                     _osiCard(widget.isEnglish ? "SCHEDULE APPOINTMENT" : "JADUAL TEMU JANJI", Icons.calendar_month, onTap: () => setState(() => _currentView = "APPT_DEPT")),
@@ -903,23 +1085,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
     DateTime startOfToday = DateTime(now.year, now.month, now.day);
 
     // Operating hours check
-    bool isClinicOpen = false;
-    if (now.weekday < 6) {
-      if (now.weekday == 5) {
-        int weekOfMonth = ((now.day - 1) / 7).floor() + 1;
-        if (weekOfMonth != 2 && weekOfMonth != 4) {
-          if (now.hour >= 8 && (now.hour < 12 || (now.hour == 12 && now.minute <= 15))) {
-            isClinicOpen = true;
-          } else if ((now.hour == 14 && now.minute >= 45) || (now.hour >= 15 && now.hour < 17)) {
-            isClinicOpen = true;
-          }
-        }
-      } else {
-        if ((now.hour >= 8 && now.hour < 13) || (now.hour >= 14 && now.hour < 17)) {
-          isClinicOpen = true;
-        }
-      }
-    }
+    bool isClinicOpen = _checkIsClinicOpen();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -966,20 +1132,26 @@ class _KioskDashboardState extends State<KioskDashboard> {
                 
                 // Get general stats
                 peopleWaiting = docs.where((d) => d['status'] == 'Waiting').length;
-                var servedDocs = docs.where((d) => d['status'] != 'Waiting').toList();
-                if (servedDocs.isNotEmpty) {
-                  servedDocs.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
-                  currentServing = servedDocs.first['queue_number'] ?? 1000;
+                var servingDocs = docs.where((d) => d['status'] == 'Serving').toList();
+                if (servingDocs.isNotEmpty) {
+                  servingDocs.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+                  currentServing = int.tryParse(servingDocs.first['queue_number'].toString()) ?? 1000;
+                } else {
+                  var completedDocs = docs.where((d) => d['status'] == 'Completed').toList();
+                  if (completedDocs.isNotEmpty) {
+                    completedDocs.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+                    currentServing = int.tryParse(completedDocs.first['queue_number'].toString()) ?? 1000;
+                  }
                 }
                 estWaitTime = peopleWaiting * 10;
 
                 // Check if current user has an active ticket to show
                 var myActiveTickets = docs.where((map) {
-                  return map['patient_id'] == widget.userId && map['status'] == 'Waiting';
+                  return map['patient_id'] == widget.userId && (map['status'] == 'Waiting' || map['status'] == 'Serving');
                 }).toList();
 
                 if (myActiveTickets.isNotEmpty) {
-                  myQueueNo = myActiveTickets.first['queue_number'];
+                  myQueueNo = int.tryParse(myActiveTickets.first['queue_number'].toString());
                 }
               }
 
@@ -1009,43 +1181,47 @@ class _KioskDashboardState extends State<KioskDashboard> {
           ),
         ),
         Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isClinicOpen) ...[
-                Text(widget.isEnglish ? "Please select your primary reason for visiting:" : "Sila pilih sebab utama lawatan anda:", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
-                const SizedBox(height: 30),
-                Wrap(
-                  spacing: 20,
-                  runSpacing: 20,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _triageCard(widget.isEnglish ? "Fever / Flu / Cough" : "Demam / Selesema / Batuk", Icons.thermostat, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Fever / Flu / Cough" : "Demam / Selesema / Batuk")),
-                    _triageCard(widget.isEnglish ? "Physical Injury / Pain" : "Kecederaan / Kesakitan Fizikal", Icons.personal_injury, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Physical Injury / Pain" : "Kecederaan / Kesakitan Fizikal")),
-                    _triageCard(widget.isEnglish ? "Follow-up / Review" : "Susulan / Semakan", Icons.loop, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Follow-up / Review" : "Susulan / Semakan")),
-                    _triageCard(widget.isEnglish ? "Other / General" : "Lain-lain / Umum", Icons.help_outline, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Other / General" : "Lain-lain / Umum")),
-                  ],
-                ),
-              ] else ...[
-                const Icon(Icons.event_busy, size: 70, color: Colors.redAccent),
-                const SizedBox(height: 20),
-                Text(
-                  widget.isEnglish 
-                      ? "Pusat Kesihatan UniMAP is currently closed.\nPlease come again during operating hours." 
-                      : "Pusat Kesihatan UniMAP ditutup pada masa ini.\nSila datang lagi pada waktu operasi.",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.redAccent, height: 1.4),
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  widget.isEnglish
-                      ? "Operating Hours:\nMon - Thu (8:00 AM - 1:00 PM, 2:00 PM - 5:00 PM)\nFri (8:00 AM - 12:15 PM, 2:45 PM - 5:00 PM)\nClosed on Weekends & 2nd/4th Friday"
-                      : "Waktu Operasi:\nIsnin - Kha (8:00 Pagi - 1:00 Ptg, 2:00 Ptg - 5:00 Ptg)\nJum (8:00 Pagi - 12:15 Tgh, 2:45 Ptg - 5:00 Ptg)\nDitutup pada Hujung Minggu & Jumaat ke-2/ke-4",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16, color: Colors.blueGrey, fontWeight: FontWeight.bold, height: 1.4),
-                ),
-              ]
-            ],
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isClinicOpen) ...[
+                    Text(widget.isEnglish ? "Please select your primary reason for visiting:" : "Sila pilih sebab utama lawatan anda:", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                    const SizedBox(height: 30),
+                    Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _triageCard(widget.isEnglish ? "Fever / Flu / Cough" : "Demam / Selesema / Batuk", Icons.thermostat, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Fever / Flu / Cough" : "Demam / Selesema / Batuk")),
+                        _triageCard(widget.isEnglish ? "Physical Injury / Pain" : "Kecederaan / Kesakitan Fizikal", Icons.personal_injury, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Physical Injury / Pain" : "Kecederaan / Kesakitan Fizikal")),
+                        _triageCard(widget.isEnglish ? "Follow-up / Review" : "Susulan / Semakan", Icons.loop, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Follow-up / Review" : "Susulan / Semakan")),
+                        _triageCard(widget.isEnglish ? "Other / General" : "Lain-lain / Umum", Icons.help_outline, onTap: () => _handleWalkInSubmission(widget.isEnglish ? "Other / General" : "Lain-lain / Umum")),
+                      ],
+                    ),
+                  ] else ...[
+                    const Icon(Icons.event_busy, size: 70, color: Colors.redAccent),
+                    const SizedBox(height: 20),
+                    Text(
+                      widget.isEnglish 
+                          ? "Pusat Kesihatan UniMAP is currently closed.\nPlease come again during operating hours." 
+                          : "Pusat Kesihatan UniMAP ditutup pada masa ini.\nSila datang lagi pada waktu operasi.",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.redAccent, height: 1.4),
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      widget.isEnglish
+                          ? "Operating Hours:\nMon - Thu (8:00 AM - 1:00 PM, 2:00 PM - 5:00 PM)\nFri (8:00 AM - 12:15 PM, 2:45 PM - 5:00 PM)\nClosed on Weekends & 2nd/4th Friday"
+                          : "Waktu Operasi:\nIsnin - Kha (8:00 Pagi - 1:00 Ptg, 2:00 Ptg - 5:00 Ptg)\nJum (8:00 Pagi - 12:15 Tgh, 2:45 Ptg - 5:00 Ptg)\nDitutup pada Hujung Minggu & Jumaat ke-2/ke-4",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16, color: Colors.blueGrey, fontWeight: FontWeight.bold, height: 1.4),
+                    ),
+                  ]
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -1083,6 +1259,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
   Future<void> _handleWalkInSubmission(String reason) async {
     showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
     
+    await _expireOldAndSkippedTickets(); // Run expiration check right before validation
+
     final activeTicketQuery = await FirebaseDatabase.instance.ref('walk_ins').once();
 
     if (mounted) Navigator.of(context, rootNavigator: true).pop();
@@ -1098,9 +1276,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
         if (catData is Map) {
           for (var v in catData.values) {
             if (v is Map && v['patient_id'] == widget.userId) {
-              bool isWaiting = v['status'] == 'Waiting';
+              bool isActive = v['status'] == 'Waiting' || v['status'] == 'Serving';
               bool isToday = (v['timestamp'] ?? 0) >= startOfTodayMs;
-              if (isWaiting && isToday) activeTickets.add(v);
+              if (isActive && isToday) activeTickets.add(v);
             }
           }
         }
@@ -1163,8 +1341,19 @@ class _KioskDashboardState extends State<KioskDashboard> {
           .startAt(startOfToday.millisecondsSinceEpoch)
           .once();
 
-      int count = snapshotEvent.snapshot.exists ? (snapshotEvent.snapshot.value as Map).length : 0;
-      queueNumber = baseNumber + count + 1; 
+      int maxQueueNo = baseNumber;
+      if (snapshotEvent.snapshot.exists) {
+        var map = snapshotEvent.snapshot.value as Map<dynamic, dynamic>;
+        for (var v in map.values) {
+          if (v is Map && v['queue_number'] != null) {
+            int qn = int.tryParse(v['queue_number'].toString()) ?? baseNumber;
+            if (qn > maxQueueNo) {
+              maxQueueNo = qn;
+            }
+          }
+        }
+      }
+      queueNumber = maxQueueNo + 1; 
 
       Map<String, dynamic> walkInData = {
         'queue_number': queueNumber,
@@ -1173,6 +1362,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
         'reason': reason,
         'status': 'Waiting',
         'timestamp': ServerValue.timestamp,
+        'date': DateFormat('yyyy-MM-dd').format(now),
+        'time': DateFormat('hh:mm a').format(now),
+        'doctor_name': 'not assigned yet',
       };
       if (phone != null) walkInData['phone'] = phone;
       if (email != null) walkInData['email'] = email;
@@ -1259,20 +1451,90 @@ class _KioskDashboardState extends State<KioskDashboard> {
   }
 
   Future<void> _preCheckAppointment(String dept) async {
+    showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
+
+    DateTime now = DateTime.now();
     var q = await FirebaseDatabase.instance.ref('appointments').once();
+    
     bool hasActive = false;
+    int consecutiveExpired = 0;
+    List<Map<dynamic, dynamic>> userAppts = [];
+
     if (q.snapshot.exists) {
       var map = q.snapshot.value as Map<dynamic, dynamic>;
-      for (var deptData in map.values) {
+      for (var deptKey in map.keys) {
+        var deptData = map[deptKey];
         if (deptData is Map) {
-          for (var v in deptData.values) {
-            if (v is Map && v['patient_id'] == widget.userId && v['status'] == 'Booked') {
-              hasActive = true;
+          for (var key in deptData.keys) {
+            var v = deptData[key];
+            if (v is Map) {
+              if (v['status'] == 'Booked') {
+                try {
+                  DateTime parsedTime = DateFormat('hh:mm a').parse(v['time']);
+                  DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(v['date']);
+                  DateTime apptDT = DateTime(parsedDate.year, parsedDate.month, parsedDate.day, parsedTime.hour, parsedTime.minute);
+                  
+                  if (apptDT.isBefore(now)) {
+                    v['status'] = 'Expired';
+                    FirebaseDatabase.instance.ref('appointments').child(deptKey.toString()).child(key.toString()).update({'status': 'Expired'});
+                  }
+                } catch (e) {}
+              }
+
+              if (v['patient_id'] == widget.userId) {
+                userAppts.add(v);
+                if (v['status'] == 'Booked') {
+                  hasActive = true;
+                }
+              }
             }
           }
         }
       }
     }
+
+    userAppts.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+
+    for (var appt in userAppts) {
+      if (appt['status'] == 'Expired' || appt['status'] == 'Cancelled') {
+        consecutiveExpired++;
+      } else if (appt['status'] == 'Booked') {
+        continue;
+      } else {
+        break; 
+      }
+    }
+
+    if (mounted) Navigator.of(context, rootNavigator: true).pop();
+
+    if (consecutiveExpired >= 3) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.block, color: Colors.red),
+              const SizedBox(width: 10),
+              Text(widget.isEnglish ? "Booking Blocked" : "Tempahan Disekat", style: const TextStyle(color: Colors.red)),
+            ],
+          ),
+          content: Text(widget.isEnglish 
+            ? "You have missed or cancelled 3 consecutive appointments.\nYou are forbidden from making another appointment through the kiosk. Please make your appointment directly at the clinic." 
+            : "Anda telah tidak hadir atau membatalkan 3 temu janji berturut-turut.\nAnda dilarang membuat temu janji lain melalui kiosk. Sila buat temu janji anda secara terus di klinik.",
+            style: const TextStyle(fontSize: 16)
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              onPressed: () => Navigator.pop(c), 
+              child: const Text("OK")
+            )
+          ]
+        )
+      );
+      return;
+    }
+
     if (hasActive) {
       if (!mounted) return;
       showDialog(
@@ -1282,13 +1544,55 @@ class _KioskDashboardState extends State<KioskDashboard> {
           content: Text(widget.isEnglish ? "You already have an active appointment. Do you still want to proceed?" : "Anda sudah mempunyai temu janji aktif. Adakah anda masih mahu meneruskan?"),
           actions: [
             TextButton(onPressed: () => Navigator.pop(c), child: Text(widget.isEnglish ? "Go Back" : "Kembali")),
-            ElevatedButton(onPressed: () { Navigator.pop(c); _handleDeptClick(dept); }, child: Text(widget.isEnglish ? "Proceed anyway" : "Teruskan juga")),
+            ElevatedButton(onPressed: () { 
+              Navigator.pop(c); 
+              if (consecutiveExpired > 0) {
+                _showExpiredWarningAndProceed(dept, consecutiveExpired);
+              } else {
+                _handleDeptClick(dept); 
+              }
+            }, child: Text(widget.isEnglish ? "Proceed anyway" : "Teruskan juga")),
           ],
         ),
       );
     } else {
-      _handleDeptClick(dept);
+      if (consecutiveExpired > 0) {
+        _showExpiredWarningAndProceed(dept, consecutiveExpired);
+      } else {
+        _handleDeptClick(dept);
+      }
     }
+  }
+
+  void _showExpiredWarningAndProceed(String dept, int missedCount) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            const SizedBox(width: 10),
+            Text(widget.isEnglish ? "Warning: Missed/Cancelled Appointments" : "Amaran: Temu Janji Terlepas/Dibatalkan", style: const TextStyle(color: Colors.orange)),
+          ],
+        ),
+        content: Text(widget.isEnglish 
+          ? "You have $missedCount consecutive missed/cancelled appointment(s).\nMissing 3 appointments consecutively will forbid you from making future appointments through the kiosk."
+          : "Anda mempunyai $missedCount temu janji terlepas/dibatalkan berturut-turut.\nTidak hadir 3 temu janji berturut-turut akan melarang anda daripada membuat temu janji masa depan melalui kiosk.",
+          style: const TextStyle(fontSize: 16)
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(widget.isEnglish ? "Cancel" : "Batal")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF133F85), foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(c);
+              _handleDeptClick(dept);
+            }, 
+            child: Text(widget.isEnglish ? "I Understand, Proceed" : "Saya Faham, Teruskan")
+          ),
+        ]
+      )
+    );
   }
 
   void _handleDeptClick(String dept) async {
@@ -1344,7 +1648,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: () {
-              _selectedEquip = null; _selectedLoanReason = null;
+              _selectedEquip = null; _selectedQuantity = null; _selectedLoanReason = null;
               _sDay = null; _sMonth = null; _sYear = null;
               _eDay = null; _eMonth = null; _eYear = null;
               setState(() => _currentView = "HOME");
@@ -1366,12 +1670,31 @@ class _KioskDashboardState extends State<KioskDashboard> {
                 key: _equipFKey,
                 child: Column(
                   children: [
-                    DropdownButtonFormField<String>(
-                        decoration: InputDecoration(labelText: widget.isEnglish ? "Equipment Type" : "Jenis Peralatan", border: const OutlineInputBorder()),
-                        items: _equipList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                        initialValue: _selectedEquip,
-                        onChanged: (v) => _selectedEquip = v,
-                        validator: (v) => v == null ? (widget.isEnglish ? "Please select equipment" : "Sila pilih peralatan") : null,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField<String>(
+                              decoration: InputDecoration(labelText: widget.isEnglish ? "Equipment Type" : "Jenis Peralatan", border: const OutlineInputBorder()),
+                              items: _equipList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                              initialValue: _selectedEquip,
+                              onChanged: (v) => _selectedEquip = v,
+                              validator: (v) => v == null ? (widget.isEnglish ? "Please select equipment" : "Sila pilih peralatan") : null,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          flex: 1,
+                          child: DropdownButtonFormField<String>(
+                              decoration: InputDecoration(labelText: widget.isEnglish ? "Quantity" : "Kuantiti", border: const OutlineInputBorder()),
+                              items: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                              initialValue: _selectedQuantity,
+                              onChanged: (v) => _selectedQuantity = v,
+                              validator: (v) => v == null ? (widget.isEnglish ? "Required" : "Perlu") : null,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 25),
                     
@@ -1429,7 +1752,40 @@ class _KioskDashboardState extends State<KioskDashboard> {
                               context: context,
                               builder: (c) => AlertDialog(
                                 title: Text(widget.isEnglish ? "Confirm Reservation" : "Sahkan Tempahan"),
-                                content: Text(widget.isEnglish ? "Reserve $_selectedEquip from\n$displayDateRange?" : "Tempah $_selectedEquip dari\n$displayDateRange?"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(widget.isEnglish 
+                                      ? "Reserve ${_selectedQuantity}x $_selectedEquip from\n$displayDateRange?" 
+                                      : "Tempah ${_selectedQuantity}x $_selectedEquip dari\n$displayDateRange?"
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade50,
+                                        border: Border.all(color: Colors.orange.shade200),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              widget.isEnglish 
+                                                ? "Important: Any damages to the equipment or late returns will incur penalty fees charged directly to your student account." 
+                                                : "Penting: Sebarang kerosakan pada peralatan atau pemulangan lewat akan mengakibatkan bayaran denda dikenakan ke atas akaun pelajar anda.",
+                                              style: TextStyle(fontSize: 14, color: Colors.orange.shade900, fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 actions: [
                                   TextButton(onPressed: () => Navigator.pop(c), child: Text(widget.isEnglish ? "Back" : "Kembali")),
                                   ElevatedButton(
@@ -1438,6 +1794,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                                       
                                       Map<String, dynamic> reservationData = {
                                         'item': _selectedEquip,
+                                        'quantity': _selectedQuantity,
                                         'start_date': DateFormat('yyyy-MM-dd').format(startDate),
                                         'end_date': DateFormat('yyyy-MM-dd').format(endDate),
                                         'reason': _selectedLoanReason,
@@ -1455,12 +1812,12 @@ class _KioskDashboardState extends State<KioskDashboard> {
                                         templateParams: {
                                           'to_email': recipientEmail,
                                           'patient_name': widget.userName.toUpperCase(),
-                                          'item': _selectedEquip,
+                                          'item': '$_selectedQuantity x $_selectedEquip',
                                           'duration': displayDateRange,
                                         },
                                       );
         
-                                      _selectedEquip = null; _selectedLoanReason = null;
+                                      _selectedEquip = null; _selectedQuantity = null; _selectedLoanReason = null;
                                       _sDay = null; _sMonth = null; _sYear = null;
                                       _eDay = null; _eMonth = null; _eYear = null;
                                       
@@ -1537,7 +1894,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       leading: Icon(Icons.medical_information, color: sc, size: 30),
-                      title: Text(data['item'] ?? "Equipment", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      title: Text(data.containsKey('quantity') ? "${data['quantity']}x ${data['item']}" : (data['item'] ?? "Equipment"), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       subtitle: Text(subtitleText),
                       trailing: Text(displayStatus, style: TextStyle(color: sc, fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
@@ -1584,6 +1941,18 @@ class _KioskDashboardState extends State<KioskDashboard> {
                 }
               });
               docs.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+
+              int consecutiveMissed = 0;
+              for (var appt in docs) {
+                if (appt['status'] == 'Expired' || appt['status'] == 'Cancelled') {
+                  consecutiveMissed++;
+                } else if (appt['status'] == 'Booked') {
+                  continue;
+                } else {
+                  break;
+                }
+              }
+
               return ListView.builder(
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
@@ -1593,7 +1962,11 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   String displayStatus = status;
                   if (status == 'Booked' && !widget.isEnglish) {
                     displayStatus = 'Ditempah';
-                  } else if (status == 'Cancelled' && !widget.isEnglish) displayStatus = 'Dibatalkan';
+                  } else if (status == 'Cancelled' && !widget.isEnglish) {
+                    displayStatus = 'Dibatalkan';
+                  } else if (status == 'Expired' && !widget.isEnglish) {
+                    displayStatus = 'Tamat Tempoh';
+                  }
                   
                   return Card(
                     elevation: 2,
@@ -1603,7 +1976,11 @@ class _KioskDashboardState extends State<KioskDashboard> {
                       title: Text(data['department'] ?? "Clinic", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                       subtitle: Text("${data['date']} | ${data['time']}"),
                       trailing: status == "Booked"
-                          ? IconButton(icon: const Icon(Icons.cancel, color: Colors.red, size: 30), onPressed: () => _showCancelConfirmation(data['id'], data['deptNode']))
+                          ? ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                              onPressed: () => _showCancelConfirmation(data['id'], data['deptNode'], consecutiveMissed),
+                              child: Text(widget.isEnglish ? "Cancel" : "Batal")
+                            )
                           : Text(displayStatus, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   );
@@ -1616,12 +1993,39 @@ class _KioskDashboardState extends State<KioskDashboard> {
     );
   }
 
-  void _showCancelConfirmation(String id, String deptNode) {
+  void _showCancelConfirmation(String id, String deptNode, int consecutiveMissed) {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
         title: Text(widget.isEnglish ? "Cancel Appointment" : "Batalkan Temu Janji"),
-        content: Text(widget.isEnglish ? "Are you sure you want to cancel this appointment?" : "Adakah anda pasti mahu membatalkan temu janji ini?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.isEnglish ? "Are you sure you want to cancel this appointment?" : "Adakah anda pasti mahu membatalkan temu janji ini?"),
+            if (consecutiveMissed > 0) ...[
+              const SizedBox(height: 15),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.orange.shade200)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(widget.isEnglish
+                        ? "Warning: You have $consecutiveMissed consecutive missed/cancelled appointment(s). Cancelling this will increase your streak. Reaching 3 will block you from future bookings."
+                        : "Amaran: Anda mempunyai $consecutiveMissed temu janji terlepas/dibatalkan berturut-turut. Membatalkan ini akan meningkatkan rekod anda. Mencapai 3 akan menyekat anda dari tempahan masa depan.",
+                        style: TextStyle(color: Colors.orange.shade900, fontSize: 14, fontWeight: FontWeight.w500)
+                      ),
+                    )
+                  ]
+                )
+              )
+            ]
+          ]
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c), child: Text(widget.isEnglish ? "No" : "Tidak")),
           ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white), onPressed: () { Navigator.pop(c); _cancelAppt(id, deptNode); }, child: Text(widget.isEnglish ? "Yes, Cancel" : "Ya, Batal")),
@@ -1845,15 +2249,31 @@ class _AppointmentPageState extends State<AppointmentPage> {
   }
 
   Future<void> _checkExistingBookings() async {
+    DateTime now = DateTime.now();
     var q = await FirebaseDatabase.instance.ref('appointments').once();
     bool active = false;
     if (q.snapshot.exists) {
       var map = q.snapshot.value as Map<dynamic, dynamic>;
-      for (var deptData in map.values) {
+      for (var deptKey in map.keys) {
+        var deptData = map[deptKey];
         if (deptData is Map) {
-          for (var v in deptData.values) {
-            if (v is Map && v['patient_id'] == widget.userId && v['status'] == 'Booked') {
-              active = true;
+          for (var key in deptData.keys) {
+            var v = deptData[key];
+            if (v is Map && v['status'] == 'Booked') {
+              try {
+                DateTime parsedTime = DateFormat('hh:mm a').parse(v['time']);
+                DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(v['date']);
+                DateTime apptDT = DateTime(parsedDate.year, parsedDate.month, parsedDate.day, parsedTime.hour, parsedTime.minute);
+                
+                if (apptDT.isBefore(now)) {
+                  v['status'] = 'Expired';
+                  FirebaseDatabase.instance.ref('appointments').child(deptKey.toString()).child(key.toString()).update({'status': 'Expired'});
+                }
+              } catch (e) {}
+
+              if (v['patient_id'] == widget.userId && v['status'] == 'Booked') {
+                active = true;
+              }
             }
           }
         }
@@ -1882,7 +2302,8 @@ class _AppointmentPageState extends State<AppointmentPage> {
     DateTime now = DateTime.now();
     if (selDate!.year == now.year && selDate!.month == now.month && selDate!.day == now.day) {
       try {
-        DateTime parsedTime = DateFormat('hh:mm a').parse(timeString);
+        String timeStr = timeString.replaceAll('\u202F', ' ');
+        DateTime parsedTime = DateFormat('h:mm a').parse(timeStr);
         DateTime slotDT = DateTime(selDate!.year, selDate!.month, selDate!.day, parsedTime.hour, parsedTime.minute);
         return slotDT.isBefore(now);
       } catch (e) { return false; }

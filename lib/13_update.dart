@@ -234,9 +234,26 @@ class LanguageSelectionPage extends StatelessWidget {
 }
 
 // --- WELCOME SELECTION PAGE ---
-class WelcomeSelectionPage extends StatelessWidget {
+class WelcomeSelectionPage extends StatefulWidget {
   final bool isEnglish;
   const WelcomeSelectionPage({super.key, required this.isEnglish});
+
+  @override
+  State<WelcomeSelectionPage> createState() => _WelcomeSelectionPageState();
+}
+
+class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
+  int _welcomeTapCount = 0;
+  bool _showAdminLogin = false;
+
+  void _handleWelcomeTap() {
+    setState(() {
+      _welcomeTapCount++;
+      if (_welcomeTapCount >= 3) {
+        _showAdminLogin = true;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +272,7 @@ class WelcomeSelectionPage extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const LanguageSelectionPage())), 
                     icon: const Icon(Icons.arrow_back, size: 28), 
-                    label: Text(isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
+                    label: Text(widget.isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
                   ),
                   IconButton(
                     icon: const Icon(Icons.admin_panel_settings, color: Colors.blueGrey, size: 32),
@@ -268,26 +285,30 @@ class WelcomeSelectionPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                  GestureDetector(
+                    onTap: _handleWelcomeTap,
+                    child: Text(widget.isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                  ),
                   const SizedBox(height: 10),
-                  Text(isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
+                  Text(widget.isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
                   const SizedBox(height: 50),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 40,
+                    runSpacing: 20,
                     children: [
                       _buildSelectionCard(
                         context,
-                        title: isEnglish ? "Student Login" : "Log Masuk Pelajar",
-                        desc: isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
+                        title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
+                        desc: widget.isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
                         icon: Icons.school,
                         iconBgColor: const Color(0xFF1B64F2),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: isEnglish)))
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))
                       ),
-                      const SizedBox(width: 40),
                       _buildSelectionCard(
                         context,
-                        title: isEnglish ? "Guest Login" : "Log Masuk Tetamu",
-                        desc: isEnglish ? "Continue as guest but\nwith limited access" : "Teruskan sebagai tetamu tetapi\ndengan akses terhad",
+                        title: widget.isEnglish ? "Guest Login" : "Log Masuk Tetamu",
+                        desc: widget.isEnglish ? "Continue as guest but\nwith limited access" : "Teruskan sebagai tetamu tetapi\ndengan akses terhad",
                         icon: Icons.person_outline,
                         iconBgColor: const Color(0xFF3B445B),
                         onTap: () async {
@@ -297,7 +318,7 @@ class WelcomeSelectionPage extends StatelessWidget {
                           try {
                             await FirebaseDatabase.instance.ref('login_record').push().set({
                               'patient_id': uniqueGuestId,
-                              'patient_name': isEnglish ? "GUEST" : "TETAMU",
+                              'patient_name': widget.isEnglish ? "GUEST" : "TETAMU",
                               'is_guest': true,
                               'timestamp': ServerValue.timestamp,
                               'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
@@ -311,25 +332,109 @@ class WelcomeSelectionPage extends StatelessWidget {
                           Navigator.pushAndRemoveUntil(
                             context, 
                             MaterialPageRoute(builder: (c) => KioskDashboard(
-                              userName: isEnglish ? "GUEST" : "TETAMU",
+                              userName: widget.isEnglish ? "GUEST" : "TETAMU",
                               userId: uniqueGuestId,
                               isGuest: true,
-                              isEnglish: isEnglish,
+                              isEnglish: widget.isEnglish,
                             )), 
                             (r) => false
                           );
                         }
                       ),
+                      if (_showAdminLogin)
+                        _buildSelectionCard(
+                          context,
+                          title: widget.isEnglish ? "Admin Sign In" : "Log Masuk Admin",
+                          desc: widget.isEnglish ? "Manual login for\ntesting and admin" : "Log masuk manual untuk\nujian dan admin",
+                          icon: Icons.admin_panel_settings,
+                          iconBgColor: Colors.orange.shade700,
+                          onTap: _showAdminLoginDialog,
+                        ),
                     ],
                   )
                 ],
               ),
             ),
-            Center(child: EmergencyHelpButton(isEnglish: isEnglish)),
+            Center(child: EmergencyHelpButton(isEnglish: widget.isEnglish)),
           ],
         ),
       ),
     );
+  }
+
+  void _showAdminLoginDialog() {
+    TextEditingController idController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(widget.isEnglish ? "Admin Sign In (Test Mode)" : "Log Masuk Admin (Mod Ujian)"),
+        content: TextField(
+          controller: idController,
+          decoration: InputDecoration(
+            hintText: widget.isEnglish ? "Enter Student/Admin ID" : "Masukkan ID Pelajar/Admin",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: Text(widget.isEnglish ? "Cancel" : "Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              String id = idController.text.trim();
+              if (id.isNotEmpty) {
+                Navigator.pop(c);
+                _performManualLogin(id);
+              }
+            },
+            child: Text(widget.isEnglish ? "Login" : "Log Masuk"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performManualLogin(String studentId) async {
+    showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
+    try {
+      var studentEvent = await FirebaseDatabase.instance.ref('kiosk/students').child(studentId).once();
+      if (!mounted) return;
+      Navigator.pop(context); // pop loading
+
+      String userName = "TEST ADMIN";
+      if (studentEvent.snapshot.exists) {
+        var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;
+        userName = data['name'] ?? userName;
+      }
+        
+      try {
+        await FirebaseDatabase.instance.ref('login_record').push().set({
+          'patient_id': studentId,
+          'patient_name': userName,
+          'is_guest': false,
+          'timestamp': ServerValue.timestamp,
+          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
+        });
+      } catch (e) {
+        debugPrint("Failed to record manual login: $e");
+      }
+
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context, 
+        MaterialPageRoute(builder: (context) => KioskDashboard(
+          userName: userName,
+          userId: studentId,
+          isGuest: false,
+          isEnglish: widget.isEnglish,
+        )),
+        (r) => false
+      );
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // pop loading
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   Widget _buildSelectionCard(BuildContext context, {required String title, required String desc, required IconData icon, required Color iconBgColor, required VoidCallback onTap}) {
@@ -361,7 +466,7 @@ class WelcomeSelectionPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(isEnglish ? "Continue" : "Teruskan", style: TextStyle(color: iconBgColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(widget.isEnglish ? "Continue" : "Teruskan", style: TextStyle(color: iconBgColor, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 5),
                 Icon(Icons.arrow_forward, color: iconBgColor, size: 20),
               ],

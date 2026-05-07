@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guest Check-in</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../favicon.png"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #F4F9FF;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 85%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      color: #133F85;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 25px;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    button {
+      background-color: #133F85;
+      color: white;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background-color 0.3s;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Guest Check-in</h2>
+    <p>Please enter your details to proceed.</p>
+    
+    <input type="text" id="nameInput" placeholder="Full Name" required autocomplete="name">
+    <input type="tel" id="phoneInput" placeholder="Phone Number" required autocomplete="tel">
+    
+    <button id="submitBtn">Check In</button>
+    
+    <div id="status"></div>
+  </div>
+
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // Your exact web app's Firebase configuration with the Asian databaseURL
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0t88bvV3eTZoGLqt3_DOp4AXjwEYTlW4",
+      authDomain: "smart-health-kiosk-193a5.firebaseapp.com",
+      databaseURL: "https://smart-health-kiosk-193a5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "smart-health-kiosk-193a5",
+      storageBucket: "smart-health-kiosk-193a5.firebasestorage.app",
+      messagingSenderId: "74365494988",
+      appId: "1:74365494988:web:977ee83752dbb8b7ca4469"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Extract the Kiosk ID from the URL (e.g. ?kioskId=KIOSK_01)
+    const urlParams = new URLSearchParams(window.location.search);
+    const kioskId = urlParams.get('kioskId') || 'KIOSK_01';
+
+    const submitBtn = document.getElementById('submitBtn');
+    const nameInput = document.getElementById('nameInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const statusDiv = document.getElementById('status');
+
+    submitBtn.addEventListener('click', async () => {
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+
+      if (!name || !phone) {
+        statusDiv.innerText = "Please fill in all fields.";
+        statusDiv.style.color = "red";
+        return;
+      }
+
+      // Disable button while processing
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Processing...";
+      statusDiv.innerText = "";
+
+      try {
+        // Write the data to your specific database region
+        await set(ref(database, 'pending_registrations/' + kioskId), {
+          name: name,
+          phone: phone,
+          timestamp: Date.now()
+        });
+        
+        statusDiv.innerText = "Success! Please look at the Kiosk screen.";
+        statusDiv.style.color = "green";
+        
+      } catch (error) {
+        console.error("Error writing to database:", error);
+        statusDiv.innerText = "Error: " + (error.message || "Connection failed.");
+        statusDiv.style.color = "red";
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Check In";
+      }
+    });
+  </script>
+</body>
+</html>

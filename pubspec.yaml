@@ -41,6 +41,7 @@ dependencies:
   firebase_database: 12.2.0
   flutter_blue_plus: ^1.31.0
   nfc_manager: ^3.3.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutterfire_cli: any

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, Tar
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:async';
 import 'admin_page.dart';
 import 'package:nfc_manager/nfc_manager.dart';
@@ -72,7 +73,273 @@ class SmartHealthKioskApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
-      home: const LanguageSelectionPage(), 
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        // Handle the deep link from the mobile QR scan
+        Uri uri = Uri.parse(settings.name ?? '/');
+        if (uri.path == '/checkin') {
+          String kioskId = uri.queryParameters['kioskId'] ?? 'KIOSK_01';
+          String sessionId = uri.queryParameters['session'] ?? '';
+          return MaterialPageRoute(builder: (context) => MobileCheckInPage(kioskId: kioskId, sessionId: sessionId));
+        }
+        // Default to the kiosk welcome screen
+        return MaterialPageRoute(builder: (context) => const LanguageSelectionPage());
+      },
+    );
+  }
+}
+
+// --- MOBILE CHECK-IN PAGE (Loaded on Guest's Phone) ---
+class MobileCheckInPage extends StatefulWidget {
+  final String kioskId;
+  final String sessionId;
+  const MobileCheckInPage({super.key, required this.kioskId, required this.sessionId});
+
+  @override
+  State<MobileCheckInPage> createState() => _MobileCheckInPageState();
+}
+
+class _MobileCheckInPageState extends State<MobileCheckInPage> {
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  String? _selectedGender;
+  bool _isProcessing = false;
+  String _status = "";
+  bool _isValidSession = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    try {
+      var snapshot = await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').once();
+      if (snapshot.snapshot.exists) {
+        var data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        if (data['session'] == widget.sessionId && data['status'] == 'waiting') {
+          if (mounted) setState(() { _isValidSession = true; _isLoading = false; });
+          return;
+        }
+      }
+    } catch (e) {}
+    
+    if (mounted) setState(() { _isValidSession = false; _isLoading = false; });
+  }
+
+  Future<void> _submit() async {
+    String name = _nameCtrl.text.trim();
+    String phone = _phoneCtrl.text.trim();
+
+    if (name.isEmpty || phone.isEmpty || _selectedGender == null) {
+      setState(() => _status = "Please fill in all fields.");
+      return;
+    }
+    
+    String digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.length < 10 || digitsOnly.length > 11) {
+      setState(() => _status = "Phone number must be 10 or 11 digits.");
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+      _status = "Processing...";
+    });
+
+    try {
+      var snapshot = await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').once();
+      if (snapshot.snapshot.exists) {
+        var data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        if (data['session'] != widget.sessionId || data['status'] != 'waiting') {
+          setState(() {
+            _isValidSession = false;
+            _isProcessing = false;
+          });
+          return;
+        }
+      } else {
+        setState(() {
+          _isValidSession = false;
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').update({
+        'name': name,
+        'phone': phone,
+        'gender': _selectedGender,
+        'status': 'completed',
+        'timestamp': ServerValue.timestamp,
+      });
+
+      if (mounted) {
+        // Removes the form from the navigation stack and shows the success page
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MobileCheckInSuccessPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _status = "Error: $e";
+        _isProcessing = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(backgroundColor: Color(0xFFF4F9FF), body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (!_isValidSession) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F9FF),
+        appBar: AppBar(
+          title: const Text("Guest Check-in", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: const Color(0xFF133F85),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 80, color: Colors.red),
+                const SizedBox(height: 20),
+                const Text("Session Expired", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                const SizedBox(height: 10),
+                const Text("This QR code is no longer valid or has already been used.\nPlease request a new one at the kiosk.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.blueGrey)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F9FF),
+      appBar: AppBar(
+        title: const Text("Guest Check-in", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF133F85),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.qr_code_scanner, size: 60, color: Color(0xFF133F85)),
+                const SizedBox(height: 20),
+                const Text("Welcome", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                const SizedBox(height: 10),
+                const Text("Please enter your details to check in at the kiosk.", textAlign: TextAlign.center, style: TextStyle(color: Colors.blueGrey)),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: _nameCtrl, 
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction((oldValue, newValue) => TextEditingValue(text: newValue.text.toUpperCase(), selection: newValue.selection))
+                  ],
+                  decoration: const InputDecoration(labelText: "Full Name", border: OutlineInputBorder(), prefixIcon: Icon(Icons.person))
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: _phoneCtrl, 
+                  keyboardType: TextInputType.number, 
+                  maxLength: 11,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(labelText: "Phone Number", border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone), counterText: "")
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedGender = 'Male'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(color: _selectedGender == 'Male' ? const Color(0xFF133F85) : Colors.grey.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: _selectedGender == 'Male' ? const Color(0xFF133F85) : Colors.grey.shade300)),
+                          child: Center(child: Text("Male", style: TextStyle(color: _selectedGender == 'Male' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold))),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedGender = 'Female'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(color: _selectedGender == 'Female' ? const Color(0xFF133F85) : Colors.grey.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: _selectedGender == 'Female' ? const Color(0xFF133F85) : Colors.grey.shade300)),
+                          child: Center(child: Text("Female", style: TextStyle(color: _selectedGender == 'Female' ? Colors.white : Colors.black87, fontWeight: FontWeight.bold))),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF133F85), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                    onPressed: _isProcessing ? null : _submit,
+                    child: _isProcessing ? const CircularProgressIndicator(color: Colors.white) : const Text("CHECK IN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(_status, textAlign: TextAlign.center, style: TextStyle(color: _status.contains("Success") ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- MOBILE CHECK-IN SUCCESS PAGE ---
+class MobileCheckInSuccessPage extends StatelessWidget {
+  const MobileCheckInSuccessPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F9FF),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, size: 80, color: Colors.green),
+                const SizedBox(height: 20),
+                const Text("Check-In Successful!", textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                const SizedBox(height: 15),
+                const Text("Your details have been sent to the kiosk.\nPlease look at the kiosk screen to continue.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.blueGrey, height: 1.5)),
+                const SizedBox(height: 40),
+                const Text("You can now close this page.", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -298,49 +565,19 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
                     runSpacing: 20,
                     children: [
                       _buildSelectionCard(
-                        context,
-                        title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
-                        desc: widget.isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
-                        icon: Icons.school,
-                        iconBgColor: const Color(0xFF1B64F2),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))
-                      ),
+                          context,
+                          title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
+                          desc: widget.isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
+                          icon: Icons.school,
+                          iconBgColor: const Color(0xFF1B64F2),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))),
                       _buildSelectionCard(
-                        context,
-                        title: widget.isEnglish ? "Guest Login" : "Log Masuk Tetamu",
-                        desc: widget.isEnglish ? "Continue as guest but\nwith limited access" : "Teruskan sebagai tetamu tetapi\ndengan akses terhad",
-                        icon: Icons.person_outline,
-                        iconBgColor: const Color(0xFF3B445B),
-                        onTap: () async {
-                          // Generate a unique ID using timestamp to prevent walk-in ticket conflicts
-                          String uniqueGuestId = "GUEST_${DateTime.now().millisecondsSinceEpoch}";
-                          
-                          try {
-                            await FirebaseDatabase.instance.ref('login_record').push().set({
-                              'patient_id': uniqueGuestId,
-                              'patient_name': widget.isEnglish ? "GUEST" : "TETAMU",
-                              'is_guest': true,
-                              'timestamp': ServerValue.timestamp,
-                              'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                              'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
-                            });
-                          } catch (e) {
-                            debugPrint("Failed to record guest login: $e");
-                          }
-                          
-                          if (!context.mounted) return;
-                          Navigator.pushAndRemoveUntil(
-                            context, 
-                            MaterialPageRoute(builder: (c) => KioskDashboard(
-                              userName: widget.isEnglish ? "GUEST" : "TETAMU",
-                              userId: uniqueGuestId,
-                              isGuest: true,
-                              isEnglish: widget.isEnglish,
-                            )), 
-                            (r) => false
-                          );
-                        }
-                      ),
+                          context,
+                          title: widget.isEnglish ? "Guest Login" : "Log Masuk Tetamu",
+                          desc: widget.isEnglish ? "Scan QR code to check-in\nwith your mobile phone" : "Imbas kod QR untuk daftar masuk\ndengan telefon bimbit anda",
+                          icon: Icons.qr_code_scanner,
+                          iconBgColor: const Color(0xFF3B445B),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => GuestQrPage(isEnglish: widget.isEnglish)))),
                       if (_showAdminLogin)
                         _buildSelectionCard(
                           context,
@@ -473,6 +710,203 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
             )
           ],
         ),
+      ),
+    );
+  }
+}
+
+// --- GUEST QR PAGE ---
+class GuestQrPage extends StatefulWidget {
+  final bool isEnglish;
+  const GuestQrPage({super.key, required this.isEnglish});
+
+  @override
+  State<GuestQrPage> createState() => _GuestQrPageState();
+}
+
+class _GuestQrPageState extends State<GuestQrPage> {
+  StreamSubscription<DatabaseEvent>? _subscription;
+  static const String kioskId = 'KIOSK_01';
+  bool _isProcessing = false;
+  late String _sessionId;
+  Timer? _timeoutTimer;
+  int _timeLeft = 120; // 2 minutes timeout
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionId = "SESS_${DateTime.now().millisecondsSinceEpoch}";
+    _initializeSession();
+    _startListening();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _timeoutTimer?.cancel();
+    if (!_isProcessing) {
+      FirebaseDatabase.instance.ref('pending_registrations/$kioskId').remove();
+    }
+    super.dispose();
+  }
+
+  Future<void> _initializeSession() async {
+    await FirebaseDatabase.instance.ref('pending_registrations/$kioskId').set({
+      'session': _sessionId,
+      'status': 'waiting',
+      'timestamp': ServerValue.timestamp,
+    });
+  }
+
+  void _startTimer() {
+    _timeoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        if (_timeLeft > 0) {
+          setState(() => _timeLeft--);
+        } else {
+          timer.cancel();
+          if (!_isProcessing) {
+            _handleTimeout();
+          }
+        }
+      }
+    });
+  }
+
+  void _handleTimeout() async {
+    await FirebaseDatabase.instance.ref('pending_registrations/$kioskId').remove();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (c) => const LanguageSelectionPage()),
+        (route) => false,
+      );
+    }
+  }
+
+
+  void _startListening() {
+    _subscription = FirebaseDatabase.instance.ref('pending_registrations/$kioskId').onValue.listen((event) async {
+      if (_isProcessing) return;
+
+      if (event.snapshot.exists && event.snapshot.value != null) {
+        var data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        
+        if (data['session'] == _sessionId && data['status'] == 'completed') {
+          setState(() => _isProcessing = true);
+          _timeoutTimer?.cancel();
+          
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (c) => AlertDialog(
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 20),
+                  Text(widget.isEnglish ? "Processing login..." : "Memproses log masuk..."),
+                ],
+              ),
+            ),
+          );
+
+          try {
+            String name = data['name'] ?? 'Guest';
+            String phone = data['phone'] ?? 'N/A';
+            String gender = data['gender'] ?? 'Unknown';
+            String uniqueGuestId = "GUEST_${DateTime.now().millisecondsSinceEpoch}";
+
+            await FirebaseDatabase.instance.ref('pending_registrations/$kioskId').remove();
+
+            await FirebaseDatabase.instance.ref('login_record').push().set({
+              'patient_id': uniqueGuestId,
+              'patient_name': name.toUpperCase(),
+              'phone': phone,
+              'gender': gender,
+              'is_guest': true,
+              'timestamp': ServerValue.timestamp,
+              'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+              'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
+            });
+
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (c) => KioskDashboard(
+                  userName: name.toUpperCase(),
+                  userId: uniqueGuestId,
+                  isGuest: true,
+                  isEnglish: widget.isEnglish,
+                  guestPhone: phone,
+                )),
+                (r) => false
+              );
+            }
+          } catch (e) {
+            if (mounted) Navigator.pop(context);
+            setState(() => _isProcessing = false);
+            debugPrint("Error processing guest login: $e");
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.isEnglish ? "An error occurred." : "Berlaku ralat.")));
+            }
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const String webAppUrl = 'https://smart-health-kiosk-193a5.web.app';
+    // Added /#/ to safely trigger Flutter's deep linking router
+    final String qrData = '$webAppUrl/#/checkin?kioskId=$kioskId&session=$_sessionId';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F9FF),
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  widget.isEnglish ? "Guest Check-in" : "Daftar Masuk Tetamu",
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF133F85)),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  widget.isEnglish
+                      ? "Scan the QR code with your phone to register."
+                      : "Imbas kod QR dengan telefon anda untuk mendaftar.",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18, color: Colors.blueGrey),
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  widget.isEnglish
+                      ? "QR Code expires in: $_timeLeft seconds"
+                      : "Kod QR tamat tempoh dalam: $_timeLeft saat",
+                  style: const TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 25),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))]),
+                  child: QrImageView(data: qrData, version: QrVersions.auto, size: 280.0),
+                ),
+                const SizedBox(height: 40),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: Text(widget.isEnglish ? "CANCEL" : "BATAL", style: const TextStyle(fontSize: 16)),
+                ),
+              ],
+            ),
+          ),
+          Align(alignment: Alignment.bottomCenter, child: EmergencyHelpButton(isEnglish: widget.isEnglish)),
+        ],
       ),
     );
   }

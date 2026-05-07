@@ -1709,10 +1709,18 @@ class _KioskDashboardState extends State<KioskDashboard> {
       map.forEach((catKey, catData) {
         if (catData is Map) {
           for (var v in catData.values) {
-            if (v is Map && v['patient_id'] == widget.userId) {
-              bool isActive = v['status'] == 'Waiting' || v['status'] == 'Serving';
-              bool isToday = (v['timestamp'] ?? 0) >= startOfTodayMs;
-              if (isActive && isToday) activeTickets.add(v);
+            if (v is Map) {
+              bool isSameUser = v['patient_id'] == widget.userId;
+              if (widget.isGuest && widget.guestPhone != null && widget.guestPhone!.isNotEmpty) {
+                if (v['phone'] == widget.guestPhone) {
+                  isSameUser = true;
+                }
+              }
+              if (isSameUser) {
+                bool isActive = v['status'] == 'Waiting' || v['status'] == 'Serving';
+                bool isToday = (v['timestamp'] ?? 0) >= startOfTodayMs;
+                if (isActive && isToday) activeTickets.add(v);
+              }
             }
           }
         }

@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'admin_page.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'web_listener_logic.dart';
 
@@ -255,9 +254,8 @@ class WelcomeSelectionPage extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.admin_panel_settings, color: Colors.blueGrey, size: 32),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const AdminDashboardPage())),
-                  ),
-                ],
+                    onPressed: () => _showAdminLoginDialog(context),
+                  ),       ],
               ),
             ),
             Expanded(
@@ -324,6 +322,83 @@ class WelcomeSelectionPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showAdminLoginDialog(BuildContext context) {
+    TextEditingController idController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(isEnglish ? "Admin Sign In (Test Mode)" : "Log Masuk Admin (Mod Ujian)"),
+        content: TextField(
+          controller: idController,
+          decoration: InputDecoration(
+            hintText: isEnglish ? "Enter Student/Admin ID" : "Masukkan ID Pelajar/Admin",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: Text(isEnglish ? "Cancel" : "Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              String id = idController.text.trim();
+              if (id.isNotEmpty) {
+                Navigator.pop(c);
+                _performManualLogin(context, id);
+              }
+            },
+            child: Text(isEnglish ? "Login" : "Log Masuk"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performManualLogin(BuildContext context, String studentId) async {
+    showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
+    try {
+      var studentEvent = await FirebaseDatabase.instance.ref('students').child(studentId).once();
+      if (!context.mounted) return;
+      Navigator.pop(context); // pop loading
+
+      String userName = "TEST ADMIN";
+      if (studentEvent.snapshot.exists) {
+        var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;
+        userName = data['name'] ?? userName;
+      }
+        
+      try {
+        await FirebaseDatabase.instance.ref('login_record').push().set({
+          'patient_id': studentId,
+          'patient_name': userName,
+          'is_guest': false,
+          'timestamp': ServerValue.timestamp,
+          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
+        });
+      } catch (e) {
+        debugPrint("Failed to record manual login: $e");
+      }
+
+      if (!context.mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context, 
+        MaterialPageRoute(builder: (context) => KioskDashboard(
+          userName: userName,
+          userId: studentId,
+          isGuest: false,
+          isEnglish: isEnglish,
+        )),
+        (r) => false
+      );
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // pop loading
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    }
   }
 
   Widget _buildSelectionCard(BuildContext context, {required String title, required String desc, required IconData icon, required Color iconBgColor, required VoidCallback onTap}) {
@@ -494,7 +569,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> {
         var studentId = nfcEvent.snapshot.value.toString();
         
         // Fetch the actual student data using the retrieved studentId
-        var studentEvent = await FirebaseDatabase.instance.ref('kiosk/students').child(studentId).once();
+        var studentEvent = await FirebaseDatabase.instance.ref('students').child(studentId).once();
         
         if (studentEvent.snapshot.exists) {
           var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;

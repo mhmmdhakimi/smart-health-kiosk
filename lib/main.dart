@@ -8,7 +8,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:async';
-import 'admin_page.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'web_listener_logic.dart';
 
@@ -144,6 +143,8 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
       return;
     }
 
+    String formattedPhone = phone.startsWith('0') ? '60' + phone.substring(1) : '60' + phone;
+
     setState(() {
       _isProcessing = true;
       _status = "Processing...";
@@ -170,7 +171,7 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
 
       await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').update({
         'name': name,
-        'phone': phone,
+        'phone': formattedPhone,
         'gender': _selectedGender,
         'status': 'completed',
         'timestamp': ServerValue.timestamp,
@@ -510,17 +511,6 @@ class WelcomeSelectionPage extends StatefulWidget {
 }
 
 class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
-  int _welcomeTapCount = 0;
-  bool _showAdminLogin = false;
-
-  void _handleWelcomeTap() {
-    setState(() {
-      _welcomeTapCount++;
-      if (_welcomeTapCount >= 3) {
-        _showAdminLogin = true;
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -541,10 +531,6 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
                     icon: const Icon(Icons.arrow_back, size: 28), 
                     label: Text(widget.isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.admin_panel_settings, color: Colors.blueGrey, size: 32),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const AdminDashboardPage())),
-                  ),
                 ],
               ),
             ),
@@ -552,10 +538,7 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                    onTap: _handleWelcomeTap,
-                    child: Text(widget.isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
-                  ),
+                  Text(widget.isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
                   const SizedBox(height: 10),
                   Text(widget.isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
                   const SizedBox(height: 50),
@@ -578,15 +561,6 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
                           icon: Icons.qr_code_scanner,
                           iconBgColor: const Color(0xFF3B445B),
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => GuestQrPage(isEnglish: widget.isEnglish)))),
-                      if (_showAdminLogin)
-                        _buildSelectionCard(
-                          context,
-                          title: widget.isEnglish ? "Admin Sign In" : "Log Masuk Admin",
-                          desc: widget.isEnglish ? "Manual login for\ntesting and admin" : "Log masuk manual untuk\nujian dan admin",
-                          icon: Icons.admin_panel_settings,
-                          iconBgColor: Colors.orange.shade700,
-                          onTap: _showAdminLoginDialog,
-                        ),
                     ],
                   )
                 ],
@@ -634,7 +608,7 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
   Future<void> _performManualLogin(String studentId) async {
     showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
     try {
-      var studentEvent = await FirebaseDatabase.instance.ref('kiosk/students').child(studentId).once();
+      var studentEvent = await FirebaseDatabase.instance.ref('students').child(studentId).once();
       if (!mounted) return;
       Navigator.pop(context); // pop loading
 
@@ -812,9 +786,9 @@ class _GuestQrPageState extends State<GuestQrPage> {
           );
 
           try {
-            String name = data['name'] ?? 'Guest';
-            String phone = data['phone'] ?? 'N/A';
-            String gender = data['gender'] ?? 'Unknown';
+            String name = data['name']?.toString() ?? 'Guest';
+            String phone = data['phone']?.toString() ?? 'N/A';
+            String gender = data['gender']?.toString() ?? 'Unknown';
             String uniqueGuestId = "GUEST_${DateTime.now().millisecondsSinceEpoch}";
 
             await FirebaseDatabase.instance.ref('pending_registrations/$kioskId').remove();
@@ -1039,7 +1013,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> {
         var studentId = nfcEvent.snapshot.value.toString();
         
         // Fetch the actual student data using the retrieved studentId
-        var studentEvent = await FirebaseDatabase.instance.ref('kiosk/students').child(studentId).once();
+        var studentEvent = await FirebaseDatabase.instance.ref('students').child(studentId).once();
         
         if (studentEvent.snapshot.exists) {
           var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;
@@ -1808,8 +1782,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
         'time': DateFormat('hh:mm a').format(now),
         'doctor_name': 'not assigned yet',
       };
-      if (phone != null) walkInData['phone'] = phone;
-      if (email != null) walkInData['email'] = email;
+      if (phone != null) walkInData['phone'] = phone.toString();
+      if (email != null) walkInData['email'] = email.toString();
 
       await FirebaseDatabase.instance.ref('walk_ins').child(categoryNode).push().set(walkInData);
       success = true;

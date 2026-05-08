@@ -573,49 +573,6 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
     );
   }
 
-  Future<void> _performManualLogin(String studentId) async {
-    showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
-    try {
-      var studentEvent = await FirebaseDatabase.instance.ref('students').child(studentId).once();
-      if (!mounted) return;
-      Navigator.pop(context); // pop loading
-
-      String userName = "TEST ADMIN";
-      if (studentEvent.snapshot.exists) {
-        var data = studentEvent.snapshot.value as Map<dynamic, dynamic>;
-        userName = data['name'] ?? userName;
-      }
-        
-      try {
-        await FirebaseDatabase.instance.ref('login_record').push().set({
-          'patient_id': studentId,
-          'patient_name': userName,
-          'is_guest': false,
-          'timestamp': ServerValue.timestamp,
-          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-          'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
-        });
-      } catch (e) {
-        debugPrint("Failed to record manual login: $e");
-      }
-
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context, 
-        MaterialPageRoute(builder: (context) => KioskDashboard(
-          userName: userName,
-          userId: studentId,
-          isGuest: false,
-          isEnglish: widget.isEnglish,
-        )),
-        (r) => false
-      );
-    } catch (e) {
-      if (mounted) Navigator.pop(context); // pop loading
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-    }
-  }
-
   Widget _buildSelectionCard(BuildContext context, {required String title, required String desc, required IconData icon, required Color iconBgColor, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,

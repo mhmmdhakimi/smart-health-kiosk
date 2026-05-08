@@ -573,38 +573,6 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
     );
   }
 
-  void _showAdminLoginDialog() {
-    TextEditingController idController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(widget.isEnglish ? "Admin Sign In (Test Mode)" : "Log Masuk Admin (Mod Ujian)"),
-        content: TextField(
-          controller: idController,
-          decoration: InputDecoration(
-            hintText: widget.isEnglish ? "Enter Student/Admin ID" : "Masukkan ID Pelajar/Admin",
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: Text(widget.isEnglish ? "Cancel" : "Batal"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              String id = idController.text.trim();
-              if (id.isNotEmpty) {
-                Navigator.pop(c);
-                _performManualLogin(id);
-              }
-            },
-            child: Text(widget.isEnglish ? "Login" : "Log Masuk"),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _performManualLogin(String studentId) async {
     showDialog(context: context, barrierDismissible: false, builder: (c) => const Center(child: CircularProgressIndicator()));
     try {

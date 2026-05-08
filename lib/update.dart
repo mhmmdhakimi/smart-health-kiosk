@@ -143,7 +143,7 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
       return;
     }
 
-    String formattedPhone = phone.startsWith('0') ? '60' + phone.substring(1) : '60' + phone;
+    String formattedPhone = phone.startsWith('0') ? '60${phone.substring(1)}' : '60$phone';
 
     setState(() {
       _isProcessing = true;

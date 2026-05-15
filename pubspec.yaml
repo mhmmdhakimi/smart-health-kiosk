@@ -42,6 +42,7 @@ dependencies:
   flutter_blue_plus: ^1.31.0
   nfc_manager: ^3.3.0
   qr_flutter: ^4.1.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutterfire_cli: any

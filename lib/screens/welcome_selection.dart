@@ -52,7 +52,7 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
                       _buildSelectionCard(
                           context,
                           title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
-                          desc: widget.isEnglish ? "Tap your NFC student card\nfor full access" : "Sentuh kad NFC pelajar anda\nuntuk akses penuh",
+                          desc: widget.isEnglish ? "Tap your RFID student card\nfor full access" : "Sentuh kad RFID pelajar anda\nuntuk akses penuh",
                           icon: Icons.school,
                           iconBgColor: const Color(0xFF1B64F2),
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))),

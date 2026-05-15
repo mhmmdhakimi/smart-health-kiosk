@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/emergency_button.dart';
-import 'language_selection.dart';
 import 'kiosk_login.dart';
-import 'guest_qr.dart';
+import 'app_login_qr.dart';
+import 'student_verification.dart';
 
 class WelcomeSelectionPage extends StatefulWidget {
   final bool isEnglish;
@@ -28,8 +28,8 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const LanguageSelectionPage())), 
+                   TextButton.icon(
+                    onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => StudentVerificationPage(isEnglish: widget.isEnglish))), 
                     icon: const Icon(Icons.arrow_back, size: 28), 
                     label: Text(widget.isEnglish ? "Back" : "Kembali", style: const TextStyle(fontSize: 18))
                   ),
@@ -40,9 +40,9 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(widget.isEnglish ? "Welcome" : "Selamat Datang", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
+                  Text(widget.isEnglish ? "Select Login Method" : "Pilih Kaedah Log Masuk", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Color(0xFF133F85))),
                   const SizedBox(height: 10),
-                  Text(widget.isEnglish ? "How would you like to continue?" : "Bagaimana anda ingin meneruskan?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
+                  Text(widget.isEnglish ? "How would you like to log in?" : "Bagaimana anda ingin log masuk?", style: const TextStyle(fontSize: 20, color: Colors.blueGrey)),
                   const SizedBox(height: 50),
                   Wrap(
                     alignment: WrapAlignment.center,
@@ -51,18 +51,18 @@ class _WelcomeSelectionPageState extends State<WelcomeSelectionPage> {
                     children: [
                       _buildSelectionCard(
                           context,
-                          title: widget.isEnglish ? "Student Login" : "Log Masuk Pelajar",
-                          desc: widget.isEnglish ? "Tap your RFID student card\nfor full access" : "Sentuh kad RFID pelajar anda\nuntuk akses penuh",
-                          icon: Icons.school,
+                          title: widget.isEnglish ? "Login via Student Card" : "Log Masuk via Kad Pelajar",
+                          desc: widget.isEnglish ? "Tap your RFID student card\non the physical scanner" : "Sentuh kad RFID pelajar anda\npada pengimbas fizikal",
+                          icon: Icons.contactless_rounded,
                           iconBgColor: const Color(0xFF1B64F2),
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: widget.isEnglish)))),
                       _buildSelectionCard(
                           context,
-                          title: widget.isEnglish ? "Guest Login" : "Log Masuk Tetamu",
-                          desc: widget.isEnglish ? "Scan QR code to check-in\nwith your mobile phone" : "Imbas kod QR untuk daftar masuk\ndengan telefon bimbit anda",
-                          icon: Icons.qr_code_scanner,
-                          iconBgColor: const Color(0xFF3B445B),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => GuestQrPage(isEnglish: widget.isEnglish)))),
+                          title: widget.isEnglish ? "Login via UniMAP Health App" : "Log Masuk via Aplikasi UniMAP Health",
+                          desc: widget.isEnglish ? "Scan QR code with the\nUniMAP Health mobile app" : "Imbas kod QR dengan\naplikasi UniMAP Health",
+                          icon: Icons.smartphone_rounded,
+                          iconBgColor: const Color(0xFF133F85),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => AppLoginQrPage(isEnglish: widget.isEnglish)))),
                     ],
                   )
                 ],

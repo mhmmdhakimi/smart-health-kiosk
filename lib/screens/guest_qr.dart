@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../widgets/emergency_button.dart';
 import 'language_selection.dart';
+import 'student_verification.dart';
 import 'kiosk_dashboard.dart';
 
 class GuestQrPage extends StatefulWidget {
@@ -15,7 +17,7 @@ class GuestQrPage extends StatefulWidget {
   State<GuestQrPage> createState() => _GuestQrPageState();
 }
 
-class _GuestQrPageState extends State<GuestQrPage> {
+class _GuestQrPageState extends State<GuestQrPage> with SingleTickerProviderStateMixin {
   StreamSubscription<DatabaseEvent>? _subscription;
   static const String kioskId = 'KIOSK_01';
   bool _isProcessing = false;
@@ -23,10 +25,24 @@ class _GuestQrPageState extends State<GuestQrPage> {
   Timer? _timeoutTimer;
   int _timeLeft = 120; // 2 minutes timeout
 
+  // Pulse animation for the QR container
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnim;
+
   @override
   void initState() {
     super.initState();
     _sessionId = "SESS_${DateTime.now().millisecondsSinceEpoch}";
+    
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+
+    _pulseAnim = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _initializeSession();
     _startListening();
     _startTimer();
@@ -36,6 +52,7 @@ class _GuestQrPageState extends State<GuestQrPage> {
   void dispose() {
     _subscription?.cancel();
     _timeoutTimer?.cancel();
+    _pulseController.dispose();
     if (!_isProcessing) {
       FirebaseDatabase.instance.ref('pending_registrations/$kioskId').remove();
     }
@@ -76,7 +93,6 @@ class _GuestQrPageState extends State<GuestQrPage> {
     }
   }
 
-
   void _startListening() {
     _subscription = FirebaseDatabase.instance.ref('pending_registrations/$kioskId').onValue.listen((event) async {
       if (_isProcessing) return;
@@ -88,19 +104,28 @@ class _GuestQrPageState extends State<GuestQrPage> {
           setState(() => _isProcessing = true);
           _timeoutTimer?.cancel();
           
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (c) => AlertDialog(
-              content: Row(
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(width: 20),
-                  Text(widget.isEnglish ? "Processing login..." : "Memproses log masuk..."),
-                ],
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (c) => AlertDialog(
+                backgroundColor: const Color(0xFF111827),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Colors.cyanAccent)),
+                content: Row(
+                  children: [
+                    const CircularProgressIndicator(color: Colors.cyanAccent),
+                    const SizedBox(width: 20),
+                    Text(
+                      widget.isEnglish ? "Processing login..." : "Memproses log masuk...",
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
+            );
+          }
 
           try {
             String name = data['name']?.toString() ?? 'Guest';
@@ -139,12 +164,24 @@ class _GuestQrPageState extends State<GuestQrPage> {
             setState(() => _isProcessing = false);
             debugPrint("Error processing guest login: $e");
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.isEnglish ? "An error occurred." : "Berlaku ralat.")));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                backgroundColor: Colors.redAccent,
+                content: Text(
+                  widget.isEnglish ? "An error occurred." : "Berlaku ralat.",
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ));
             }
           }
         }
       }
     });
+  }
+
+  Color get _timerColor {
+    if (_timeLeft > 60) return Colors.cyanAccent;
+    if (_timeLeft > 30) return Colors.amberAccent;
+    return Colors.redAccent;
   }
 
   @override
@@ -153,50 +190,153 @@ class _GuestQrPageState extends State<GuestQrPage> {
     final String qrData = '$webAppUrl/#/checkin?kioskId=$kioskId&session=$_sessionId';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F9FF),
-      body: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  widget.isEnglish ? "Guest Check-in" : "Daftar Masuk Tetamu",
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF133F85)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          )
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Left Column: Timer & QR Code
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // ── Countdown Circular Progress ────────────────────────────────────
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 70,
+                              height: 70,
+                              child: CircularProgressIndicator(
+                                value: _timeLeft / 120.0,
+                                strokeWidth: 6,
+                                color: _timerColor,
+                                backgroundColor: Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                            Text(
+                              '$_timeLeft',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: _timerColor,
+                                shadows: [Shadow(color: _timerColor.withOpacity(0.8), blurRadius: 8)],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+                        
+                        // ── QR Code Scanner Frame ──────────────────────────────────────
+                        ScaleTransition(
+                          scale: _pulseAnim,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(30),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.04),
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(color: Colors.cyanAccent.withOpacity(0.5), width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.cyanAccent.withOpacity(0.2),
+                                      blurRadius: 30,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: QrImageView(
+                                    data: qrData, 
+                                    version: QrVersions.auto, 
+                                    size: 220.0,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Right Column: Title, Instructions, Cancel Button
+                    SizedBox(
+                      width: 450,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.isEnglish ? "Guest Check-in" : "Daftar Masuk Tetamu",
+                            style: TextStyle(
+                              fontSize: 36, 
+                              fontWeight: FontWeight.bold, 
+                              color: Colors.white,
+                              shadows: [Shadow(color: Colors.cyanAccent.withOpacity(0.5), blurRadius: 10)],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            widget.isEnglish
+                                ? "Scan the QR code with your phone to register. Complete the registration form on your device."
+                                : "Imbas kod QR dengan telefon anda untuk mendaftar. Lengkapkan borang pendaftaran di peranti anda.",
+                            style: const TextStyle(fontSize: 18, color: Colors.white70, height: 1.4),
+                          ),
+                          
+                          const SizedBox(height: 50),
+                          
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.cyanAccent,
+                              side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5), width: 1.5),
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              backgroundColor: Colors.cyanAccent.withOpacity(0.1),
+                            ),
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (c) => StudentVerificationPage(isEnglish: widget.isEnglish)),
+                                (route) => false,
+                              );
+                            },
+                            icon: const Icon(Icons.cancel_outlined),
+                            label: Text(
+                              widget.isEnglish ? "CANCEL" : "BATAL", 
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2)
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  widget.isEnglish
-                      ? "Scan the QR code with your phone to register."
-                      : "Imbas kod QR dengan telefon anda untuk mendaftar.",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, color: Colors.blueGrey),
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  widget.isEnglish
-                      ? "QR Code expires in: $_timeLeft seconds"
-                      : "Kod QR tamat tempoh dalam: $_timeLeft saat",
-                  style: const TextStyle(fontSize: 16, color: Colors.red, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 25),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))]),
-                  child: QrImageView(data: qrData, version: QrVersions.auto, size: 280.0),
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: Text(widget.isEnglish ? "CANCEL" : "BATAL", style: const TextStyle(fontSize: 16)),
-                ),
-              ],
+              ),
             ),
-          ),
-          Align(alignment: Alignment.bottomCenter, child: EmergencyHelpButton(isEnglish: widget.isEnglish)),
-        ],
+            Align(alignment: Alignment.bottomCenter, child: EmergencyHelpButton(isEnglish: widget.isEnglish)),
+          ],
+        ),
       ),
     );
   }

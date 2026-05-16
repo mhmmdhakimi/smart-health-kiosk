@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../widgets/emergency_button.dart';
 import 'language_selection.dart';
 import 'welcome_selection.dart';
@@ -11,238 +12,175 @@ class StudentVerificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F9FF),
-      body: Stack(
-        children: [
-          // ── Back button (top-left) ──────────────────────────────────────
-          Positioned(
-            top: 20,
-            left: 20,
-            child: TextButton.icon(
-              onPressed: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
-              ),
-              icon: const Icon(Icons.arrow_back, size: 28, color: Color(0xFF133F85)),
-              label: Text(
-                isEnglish ? 'Back' : 'Kembali',
-                style: const TextStyle(fontSize: 18, color: Color(0xFF133F85)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          )
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 20,
+              left: 20,
+              child: TextButton.icon(
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+                ),
+                icon: const Icon(Icons.arrow_back, size: 28, color: Colors.white),
+                label: Text(
+                  isEnglish ? 'Back' : 'Kembali',
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ),
-          ),
-
-          // ── Main content ───────────────────────────────────────────────
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon badge
-                Container(
-                  padding: const EdgeInsets.all(26),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF133F85),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF133F85).withOpacity(0.35),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.04),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                        ),
+                        child: Text(
+                          isEnglish
+                              ? 'Are you a UniMAP student?'
+                              : 'Adakah anda pelajar UniMAP?',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _VerificationButton(
+                        label: isEnglish ? 'YES' : 'YA',
+                        icon: Icons.school_rounded,
+                        glowColor: const Color(0xFF06B6D4),
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WelcomeSelectionPage(isEnglish: isEnglish),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                      _VerificationButton(
+                        label: isEnglish ? 'NO (GUEST)' : 'TIDAK (TETAMU)',
+                        icon: Icons.person_outline_rounded,
+                        glowColor: const Color(0xFF6366F1), 
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GuestQrPage(isEnglish: isEnglish),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.school_rounded, color: Colors.white, size: 64),
-                ),
-
-                const SizedBox(height: 36),
-
-                // Question
-                Text(
-                  isEnglish
-                      ? 'Are you a UniMAP student?'
-                      : 'Adakah anda pelajar UniMAP?',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF133F85),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Text(
-                  isEnglish
-                      ? 'Please select the option that applies to you.'
-                      : 'Sila pilih pilihan yang berkenaan.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, color: Colors.blueGrey),
-                ),
-
-                const SizedBox(height: 56),
-
-                // YES / NO cards
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _VerificationCard(
-                      label: isEnglish ? 'YES' : 'YA',
-                      sublabel: isEnglish ? 'I am a UniMAP student' : 'Saya pelajar UniMAP',
-                      icon: Icons.check_circle_rounded,
-                      primaryColor: const Color(0xFF1B64F2),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => WelcomeSelectionPage(isEnglish: isEnglish),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 40),
-                    _VerificationCard(
-                      label: isEnglish ? 'NO' : 'TIDAK',
-                      sublabel: isEnglish ? 'I am a guest / visitor' : 'Saya tetamu / pelawat',
-                      icon: Icons.person_outline_rounded,
-                      primaryColor: const Color(0xFF3B445B),
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => GuestQrPage(isEnglish: isEnglish),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-
-          // ── Emergency button ───────────────────────────────────────────
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: EmergencyHelpButton(
-              isEnglish: true,
-              customText: 'EMERGENCY / KECEMASAN',
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: EmergencyHelpButton(
+                isEnglish: true,
+                customText: 'EMERGENCY / KECEMASAN',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Private card widget
-// ────────────────────────────────────────────────────────────────────────────
-class _VerificationCard extends StatefulWidget {
+class _VerificationButton extends StatefulWidget {
   final String label;
-  final String sublabel;
   final IconData icon;
-  final Color primaryColor;
+  final Color glowColor;
   final VoidCallback onTap;
 
-  const _VerificationCard({
+  const _VerificationButton({
     required this.label,
-    required this.sublabel,
     required this.icon,
-    required this.primaryColor,
+    required this.glowColor,
     required this.onTap,
   });
 
   @override
-  State<_VerificationCard> createState() => _VerificationCardState();
+  State<_VerificationButton> createState() => _VerificationButtonState();
 }
 
-class _VerificationCardState extends State<_VerificationCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-      lowerBound: 0.0,
-      upperBound: 0.04,
-    );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _VerificationButtonState extends State<_VerificationButton> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
+      onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
-        _controller.reverse();
+        setState(() => _isPressed = false);
         widget.onTap();
       },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnim,
-        child: Container(
-          width: 300,
-          height: 320,
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: widget.primaryColor.withOpacity(0.15),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 300,
+            height: 250,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _isPressed ? widget.glowColor : Colors.white.withOpacity(0.1),
+                width: _isPressed ? 2 : 1,
               ),
-              const BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-            border: Border.all(
-              color: widget.primaryColor.withOpacity(0.12),
-              width: 1.5,
+              boxShadow: _isPressed ? [
+                BoxShadow(
+                  color: widget.glowColor.withOpacity(0.3),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                )
+              ] : [],
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon circle
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  color: widget.primaryColor,
-                  borderRadius: BorderRadius.circular(18),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(widget.icon, color: _isPressed ? widget.glowColor : Colors.white, size: 64),
+                const SizedBox(height: 28),
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: _isPressed ? widget.glowColor : Colors.white,
+                    letterSpacing: 1.2,
+                  ),
                 ),
-                child: Icon(widget.icon, color: Colors.white, size: 56),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: widget.primaryColor,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                widget.sublabel,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.blueGrey,
-                  height: 1.4,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

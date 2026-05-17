@@ -20,6 +20,7 @@ class KioskDashboard extends StatefulWidget {
   final bool isGuest;
   final String? guestPhone;
   final bool isEnglish;
+  final String kioskId;
 
   const KioskDashboard({
     super.key,
@@ -28,6 +29,7 @@ class KioskDashboard extends StatefulWidget {
     required this.isGuest,
     this.guestPhone,
     required this.isEnglish,
+    this.kioskId = 'KIOSK_01',
   });
 
   @override
@@ -42,16 +44,46 @@ class _KioskDashboardState extends State<KioskDashboard> {
   Timer? _warningTimer;
   bool _isWarningDialogVisible = false;
 
+  StreamSubscription? _heartbeatSub;
+  Timer? _watchdogTimer;
+  DateTime _lastPingTime = DateTime.now();
+  bool _isHardwareOnline = false;
+
   @override
   void initState() {
     super.initState();
     _resetIdleTimer();
+    
+    _heartbeatSub?.cancel();
+    _heartbeatSub = FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/heartbeat').onValue.listen((event) {
+      if (mounted) {
+        setState(() {
+          _lastPingTime = DateTime.now();
+          _isHardwareOnline = true;
+        });
+      }
+    });
+
+    _watchdogTimer?.cancel();
+    _watchdogTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        if (DateTime.now().difference(_lastPingTime).inSeconds > 5) {
+          if (_isHardwareOnline) {
+            setState(() {
+              _isHardwareOnline = false;
+            });
+          }
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _idleTimer?.cancel();
     _warningTimer?.cancel();
+    _heartbeatSub?.cancel();
+    _watchdogTimer?.cancel();
     super.dispose();
   }
 
@@ -125,7 +157,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
     _idleTimer?.cancel();
     _warningTimer?.cancel();
 
-    FirebaseDatabase.instance.ref('kiosk/KIOSK_01/session_active').set(false);
+    FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/session_active').set(false);
 
     if (mounted) {
       // Reset all nested state layout variables explicitly
@@ -490,23 +522,28 @@ class _KioskDashboardState extends State<KioskDashboard> {
               const SizedBox(width: 30),
               Row(
                 children: [
-                  Container(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Colors.cyanAccent,
+                      color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Colors.cyanAccent, blurRadius: 10),
+                        BoxShadow(color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent, blurRadius: 10),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    "Status: Online",
-                    style: TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      _isHardwareOnline ? "Hardware Status: Online" : "Hardware Status: Offline",
+                      key: ValueKey<bool>(_isHardwareOnline),
+                      style: TextStyle(
+                        color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

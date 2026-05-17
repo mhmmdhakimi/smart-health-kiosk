@@ -10,8 +10,8 @@ class EmergencyHelpButton extends StatelessWidget {
   final bool isCompact;
 
   const EmergencyHelpButton({
-    super.key, 
-    required this.isEnglish, 
+    super.key,
+    required this.isEnglish,
     this.customText,
     this.patientName = 'UNKNOWN / PRE-LOGIN',
     this.patientId = 'N/A',
@@ -21,7 +21,7 @@ class EmergencyHelpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    VoidCallback handleEmergency = () async {
+    void handleEmergency() async {
       try {
         await FirebaseDatabase.instance.ref('emergencies').push().set({
           'patient_name': patientName,
@@ -43,13 +43,38 @@ class EmergencyHelpButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: Colors.red.withOpacity(0.5), width: 1),
             ),
-            title: Row(children: [const Icon(Icons.warning, color: Colors.redAccent, size: 40), const SizedBox(width: 10), Text(isEnglish ? "EMERGENCY" : "KECEMASAN", style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))]),
-            content: Text(isEnglish ? "Staff have been notified. Please remain at the kiosk. Help is on the way." : "Kakitangan telah dimaklumkan. Sila kekal di kiosk. Bantuan sedang dalam perjalanan.", style: const TextStyle(fontSize: 18, color: Colors.white70)),
-            actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text(isEnglish ? "DISMISS" : "TUTUP", style: const TextStyle(color: Colors.redAccent)))],
+            title: Row(
+              children: [
+                const Icon(Icons.warning, color: Colors.redAccent, size: 40),
+                const SizedBox(width: 10),
+                Text(
+                  isEnglish ? "EMERGENCY" : "KECEMASAN",
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              isEnglish
+                  ? "Staff have been notified. Please remain at the kiosk. Help is on the way."
+                  : "Kakitangan telah dimaklumkan. Sila kekal di kiosk. Bantuan sedang dalam perjalanan.",
+              style: const TextStyle(fontSize: 18, color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c),
+                child: Text(
+                  isEnglish ? "DISMISS" : "TUTUP",
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
           ),
         );
       }
-    };
+    }
 
     if (isCompact) {
       return OutlinedButton.icon(
@@ -58,12 +83,17 @@ class EmergencyHelpButton extends StatelessWidget {
           side: BorderSide(color: Colors.redAccent.withOpacity(0.5), width: 1),
           backgroundColor: Colors.redAccent.withOpacity(0.1),
           foregroundColor: Colors.redAccent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         icon: const Icon(Icons.emergency),
         label: Text(
-          customText ?? (isEnglish ? "EMERGENCY" : "KECEMASAN"), 
-          style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)
+          customText ?? (isEnglish ? "EMERGENCY" : "KECEMASAN"),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         onPressed: handleEmergency,
       );
@@ -72,7 +102,7 @@ class EmergencyHelpButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Container(
-        width: customText != null ? 380 : 280, 
+        width: customText != null ? 380 : 280,
         height: 60,
         decoration: BoxDecoration(
           color: Colors.red.withOpacity(0.15),
@@ -83,8 +113,8 @@ class EmergencyHelpButton extends StatelessWidget {
               color: Colors.red.withOpacity(0.2),
               blurRadius: 10,
               spreadRadius: 2,
-            )
-          ]
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -94,12 +124,18 @@ class EmergencyHelpButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.emergency, color: Colors.redAccent, size: 22), 
+                const Icon(Icons.emergency, color: Colors.redAccent, size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  customText ?? (isEnglish ? "EMERGENCY HELP" : "BANTUAN KECEMASAN"), 
+                  customText ??
+                      (isEnglish ? "EMERGENCY HELP" : "BANTUAN KECEMASAN"),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.redAccent)
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.redAccent,
+                  ),
                 ),
               ],
             ),

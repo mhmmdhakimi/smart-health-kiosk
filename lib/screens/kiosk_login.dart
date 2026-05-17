@@ -48,9 +48,9 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
   }
 
   Future<void> _initializeHardwareScanner() async {
-    await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
+    await FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scanned_rfid').set("");
     
-    _rfidSubscription = FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').onValue.listen((event) async {
+    _rfidSubscription = FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scanned_rfid').onValue.listen((event) async {
       if (event.snapshot.exists && event.snapshot.value != null) {
         String scannedUid = event.snapshot.value.toString();
         
@@ -90,7 +90,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
             debugPrint("Failed to record student login: $e");
           }
 
-          await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
+          await FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scanned_rfid').set("");
           if (!mounted) return;
           
           Navigator.pushAndRemoveUntil(
@@ -100,6 +100,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
               userId: studentId,
               isGuest: false,
               isEnglish: widget.isEnglish,
+              kioskId: widget.kioskId,
             )),
             (r) => false
           );
@@ -146,7 +147,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
 
   Future<void> _resetScanner() async {
     await Future.delayed(const Duration(seconds: 2));
-    await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
+    await FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scanned_rfid').set("");
     if (mounted) {
       setState(() {
         _isLoading = false;

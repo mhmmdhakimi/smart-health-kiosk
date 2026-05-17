@@ -57,12 +57,17 @@ class HistoryScreen extends StatelessWidget {
     if (status == "Booked" ||
         status == "WAITING" ||
         status == "Waiting" ||
-        status == "Pending")
+        status == "Pending") {
       return Colors.amberAccent;
-    if (status == "Approved" || status == "COMPLETED" || status == "Completed")
+    }
+    if (status == "Approved" ||
+        status == "COMPLETED" ||
+        status == "Completed") {
       return Colors.cyanAccent;
-    if (status == "Cancelled" || status == "Overdue" || status == "Expired")
+    }
+    if (status == "Cancelled" || status == "Overdue" || status == "Expired") {
       return Colors.redAccent;
+    }
     if (status == "Returned") return const Color(0xFF1B64F2);
     return Colors.white70;
   }

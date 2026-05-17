@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -769,8 +770,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                     () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (c) => Scaffold(
+                        NoAnimRoute(page: Scaffold(
                             body: Container(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
@@ -786,7 +786,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                                   userId: widget.userId,
                                   isGuest: false,
                                   isEnglish: widget.isEnglish,
-                                  onBack: () => Navigator.pop(c, "HOME"),
+                                  onBack: () => Navigator.pop(context, "HOME"),
                                   onLogOut: widget.onBack,
                                 ),
                               ),

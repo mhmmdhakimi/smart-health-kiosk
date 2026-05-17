@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'utils/no_anim_route.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,9 @@ void main() async {
 
   // KIOSK MODE: Force Landscape & Immersive Fullscreen
   // Ensure these are only called on supported platforms (Android/iOS) to prevent exceptions on Desktop/Web
-  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
     try {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeRight,
@@ -46,14 +49,16 @@ class SmartHealthKioskApp extends StatelessWidget {
         if (uri.path == '/checkin') {
           String kioskId = uri.queryParameters['kioskId'] ?? 'KIOSK_01';
           String sessionId = uri.queryParameters['session'] ?? '';
-          return MaterialPageRoute(
-              settings: settings,
-              builder: (context) => MobileCheckInPage(kioskId: kioskId, sessionId: sessionId));
+          return NoAnimRoute(
+            settings: settings,
+            page: MobileCheckInPage(kioskId: kioskId, sessionId: sessionId),
+          );
         }
         // Default to the kiosk welcome screen
-        return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const LanguageSelectionPage());
+        return NoAnimRoute(
+          settings: settings,
+          page: const LanguageSelectionPage(),
+        );
       },
     );
   }

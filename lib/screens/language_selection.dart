@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../widgets/emergency_button.dart';
@@ -46,13 +47,13 @@ class LanguageSelectionPage extends StatelessWidget {
                       _LanguageCard(
                         title: "ENGLISH",
                         icon: Icons.language,
-                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const WelcomeSelectionScreen(isEnglish: true))),
+                        onTap: () => Navigator.pushReplacement(context, NoAnimRoute(page: const WelcomeSelectionScreen(isEnglish: true))),
                       ),
                       const SizedBox(width: 40),
                       _LanguageCard(
                         title: "BAHASA MELAYU",
                         icon: Icons.translate,
-                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const WelcomeSelectionScreen(isEnglish: false))),
+                        onTap: () => Navigator.pushReplacement(context, NoAnimRoute(page: const WelcomeSelectionScreen(isEnglish: false))),
                       ),
                     ],
                   )

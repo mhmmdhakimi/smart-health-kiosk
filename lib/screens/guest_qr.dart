@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -86,7 +87,7 @@ class _GuestQrPageState extends State<GuestQrPage> with SingleTickerProviderStat
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (c) => const LanguageSelectionPage()),
+        NoAnimRoute(page: const LanguageSelectionPage()),
         (route) => false,
       );
     }
@@ -148,7 +149,7 @@ class _GuestQrPageState extends State<GuestQrPage> with SingleTickerProviderStat
             if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (c) => KioskDashboard(
+                NoAnimRoute(page: KioskDashboard(
                   userName: name.toUpperCase(),
                   userId: uniqueGuestId,
                   isGuest: true,

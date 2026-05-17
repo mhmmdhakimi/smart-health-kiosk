@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -93,7 +94,7 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const MobileCheckInSuccessPage()),
+          NoAnimRoute(page: const MobileCheckInSuccessPage()),
           (route) => false,
         );
       }

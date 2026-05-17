@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'appointment_page.dart';
@@ -30,8 +31,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   void _navigateToAppointment() async {
     String? result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (c) => Scaffold(
+      NoAnimRoute(page: Scaffold(
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -47,7 +47,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                 userId: widget.userId,
                 isGuest: false,
                 onLogOut: widget.onLogOut,
-                onBack: () => Navigator.pop(c, "HOME"),
+                onBack: () => Navigator.pop(context, "HOME"),
                 isEnglish: widget.isEnglish,
               ),
             ),

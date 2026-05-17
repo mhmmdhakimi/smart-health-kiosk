@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../widgets/emergency_button.dart';
@@ -30,7 +31,7 @@ class WelcomeSelectionScreen extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () => Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+                  NoAnimRoute(page: const LanguageSelectionPage()),
                 ),
                 icon: const Icon(Icons.arrow_back, size: 28, color: Colors.white),
                 label: Text(
@@ -65,7 +66,7 @@ class WelcomeSelectionScreen extends StatelessWidget {
                           subtext: isEnglish ? "TAP PHYSICAL CARD ON SCANNER" : "SENTUH KAD FIZIKAL PADA PENGIMBAS",
                           icon: Icons.vignette_rounded,
                           auraColor: const Color(0xFF1B64F2),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: isEnglish))),
+                          onTap: () => Navigator.push(context, NoAnimRoute(page: KioskLoginPage(isEnglish: isEnglish))),
                         ),
                       ),
                       const SizedBox(width: 24),
@@ -75,7 +76,7 @@ class WelcomeSelectionScreen extends StatelessWidget {
                           subtext: isEnglish ? "SCAN QR LINK WITH PHONE" : "IMBAS KOD QR DENGAN TELEFON",
                           icon: Icons.phonelink_setup_rounded,
                           auraColor: const Color(0xFF8B5CF6),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => AppLoginQrPage(isEnglish: isEnglish))),
+                          onTap: () => Navigator.push(context, NoAnimRoute(page: AppLoginQrPage(isEnglish: isEnglish))),
                         ),
                       ),
                       const SizedBox(width: 24),
@@ -85,7 +86,7 @@ class WelcomeSelectionScreen extends StatelessWidget {
                           subtext: isEnglish ? "PROCEED WITHOUT ACCOUNT" : "TERUSKAN TANPA AKAUN",
                           icon: Icons.person_outline_rounded,
                           auraColor: const Color(0xFF10B981),
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => GuestQrPage(isEnglish: isEnglish))),
+                          onTap: () => Navigator.push(context, NoAnimRoute(page: GuestQrPage(isEnglish: isEnglish))),
                         ),
                       ),
                     ],

@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -8,7 +9,8 @@ import 'kiosk_dashboard.dart';
 
 class KioskLoginPage extends StatefulWidget {
   final bool isEnglish;
-  const KioskLoginPage({super.key, required this.isEnglish});
+  final String kioskId;
+  const KioskLoginPage({super.key, required this.isEnglish, this.kioskId = 'KIOSK_01'});
   @override
   State<KioskLoginPage> createState() => _KioskLoginPageState();
 }
@@ -46,9 +48,9 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
   }
 
   Future<void> _initializeHardwareScanner() async {
-    await FirebaseDatabase.instance.ref('scanned_rfid').set("");
+    await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
     
-    _rfidSubscription = FirebaseDatabase.instance.ref('scanned_rfid').onValue.listen((event) async {
+    _rfidSubscription = FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').onValue.listen((event) async {
       if (event.snapshot.exists && event.snapshot.value != null) {
         String scannedUid = event.snapshot.value.toString();
         
@@ -88,12 +90,12 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
             debugPrint("Failed to record student login: $e");
           }
 
-          await FirebaseDatabase.instance.ref('scanned_rfid').set("");
+          await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
           if (!mounted) return;
           
           Navigator.pushAndRemoveUntil(
             context, 
-            MaterialPageRoute(builder: (context) => KioskDashboard(
+            NoAnimRoute(page: KioskDashboard(
               userName: data['name'] ?? (widget.isEnglish ? "STUDENT" : "PELAJAR"),
               userId: studentId,
               isGuest: false,
@@ -144,7 +146,7 @@ class _KioskLoginPageState extends State<KioskLoginPage> with SingleTickerProvid
 
   Future<void> _resetScanner() async {
     await Future.delayed(const Duration(seconds: 2));
-    await FirebaseDatabase.instance.ref('scanned_rfid').set("");
+    await FirebaseDatabase.instance.ref('kiosk/KIOSK_01/scanned_rfid').set("");
     if (mounted) {
       setState(() {
         _isLoading = false;

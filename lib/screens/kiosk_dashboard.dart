@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -124,14 +125,25 @@ class _KioskDashboardState extends State<KioskDashboard> {
     _idleTimer?.cancel();
     _warningTimer?.cancel();
 
-    FirebaseDatabase.instance.ref('kiosk_control/session_active').set(false);
+    FirebaseDatabase.instance.ref('kiosk/KIOSK_01/session_active').set(false);
 
-    if (_isWarningDialogVisible && mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
+    if (mounted) {
+      // Reset all nested state layout variables explicitly
+      setState(() {
+        _currentView = "HOME";
+        _isCheckupActive = false;
+        _isWarningDialogVisible = false;
+      });
+
+      // Cleanly close active context overlays to clear potential background dialog leakages
+      while (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
+
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (c) => const LanguageSelectionPage()),
+      NoAnimRoute(page: const LanguageSelectionPage()),
       (r) => false,
     );
   }
@@ -213,6 +225,73 @@ class _KioskDashboardState extends State<KioskDashboard> {
     }
   }
 
+  Widget _buildBentoCard({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isRestricted = false,
+  }) {
+    Widget card = GlassBentoCard(
+      icon: icon,
+      title: title,
+      onTap: isRestricted
+          ? () {
+              showDialog(
+                context: context,
+                builder: (c) => AlertDialog(
+                  backgroundColor: const Color(0xFF111827),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    side: const BorderSide(color: Colors.cyanAccent),
+                  ),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.lock, color: Colors.cyanAccent, size: 30),
+                      const SizedBox(width: 10),
+                      Text(
+                        widget.isEnglish ? "Access Restricted" : "Akses Terhad",
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    widget.isEnglish
+                        ? "This feature requires an official UniMAP Student Account. Please scan your student ID badge at the login portal to continue."
+                        : "Ciri ini memerlukan Akaun Pelajar UniMAP rasmi. Sila imbas kad ID pelajar anda di portal log masuk untuk meneruskan.",
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent.withOpacity(0.2),
+                        foregroundColor: Colors.cyanAccent,
+                        side: const BorderSide(color: Colors.cyanAccent),
+                      ),
+                      onPressed: () => Navigator.pop(c),
+                      child: Text(
+                        widget.isEnglish ? "OK, UNDERSTOOD" : "OK, FAHAM",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          : onTap,
+    );
+
+    if (isRestricted) {
+      return Opacity(
+        opacity: 0.45,
+        child: card,
+      );
+    }
+    return card;
+  }
+
   Widget _buildHome() {
     return Column(
       children: [
@@ -222,8 +301,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
             children: [
               Text(
                 widget.isEnglish
-                    ? 'WELCOME! SELECT A SERVICE'
-                    : 'SELAMAT DATANG! PILIH PERKHIDMATAN',
+                    ? 'WELCOME, ${widget.userName.toUpperCase()}!'
+                    : 'SELAMAT DATANG, ${widget.userName.toUpperCase()}!',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -251,130 +330,96 @@ class _KioskDashboardState extends State<KioskDashboard> {
           ),
         ),
         Expanded(
-          child: widget.isGuest
-              ? Column(
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Spacer(flex: 1),
-                          Expanded(
-                            flex: 2,
-                            child: GlassBentoCard(
-                              icon: Icons.monitor_heart_outlined,
-                              title: widget.isEnglish
-                                  ? 'SELF-CHECKUP'
-                                  : 'PEMERIKSAAN\nKENDIRI',
-                              onTap: () =>
-                                  setState(() => _currentView = "SELF_CHECKUP"),
-                            ),
-                          ),
-                          const SizedBox(width: 30),
-                          Expanded(
-                            flex: 2,
-                            child: GlassBentoCard(
-                              icon: Icons.directions_walk_outlined,
-                              title: widget.isEnglish
-                                  ? 'WALK-IN'
-                                  : 'WALK-IN (TIDAK\nBERJADUAL)',
-                              onTap: () => setState(
-                                () => _currentView = "WALK_IN_TRIAGE",
-                              ),
-                            ),
-                          ),
-                          const Spacer(flex: 1),
-                        ],
+                      child: _buildBentoCard(
+                        icon: Icons.monitor_heart_outlined,
+                        title: widget.isEnglish
+                            ? 'SELF-CHECKUP'
+                            : 'PEMERIKSAAN\nKENDIRI',
+                        onTap: () =>
+                            setState(() => _currentView = "SELF_CHECKUP"),
+                        isRestricted: false,
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    const Expanded(child: SizedBox()),
-                  ],
-                )
-              : Column(
-                  children: [
+                    const SizedBox(width: 25),
                     Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.monitor_heart_outlined,
-                              title: widget.isEnglish
-                                  ? 'SELF-CHECKUP'
-                                  : 'PEMERIKSAAN\nKENDIRI',
-                              onTap: () =>
-                                  setState(() => _currentView = "SELF_CHECKUP"),
-                            ),
-                          ),
-                          const SizedBox(width: 25),
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.person_search_outlined,
-                              title: widget.isEnglish
-                                  ? 'MEDICAL\nCONSULTATION'
-                                  : 'RUNDINGAN\nPERUBATAN',
-                              onTap: () => setState(
-                                () => _currentView = "SEE_DOCTOR_OPT",
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 25),
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.wheelchair_pickup_outlined,
-                              title: widget.isEnglish
-                                  ? 'MEDICAL EQUIPMENT\nRESERVATION'
-                                  : 'TEMPAHAN PERALATAN\nPERUBATAN',
-                              onTap: () =>
-                                  setState(() => _currentView = "EQUIP_RES"),
-                            ),
-                          ),
-                        ],
+                      child: _buildBentoCard(
+                        icon: Icons.person_search_outlined,
+                        title: widget.isEnglish
+                            ? 'MEDICAL\nCONSULTATION'
+                            : 'RUNDINGAN\nPERUBATAN',
+                        onTap: () => setState(
+                          () => _currentView = "SEE_DOCTOR_OPT",
+                        ),
+                        isRestricted: widget.isGuest,
                       ),
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(width: 25),
                     Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.history_outlined,
-                              title: widget.isEnglish
-                                  ? 'HEALTH RECORD'
-                                  : 'REKOD KESIHATAN',
-                              onTap: () =>
-                                  setState(() => _currentView = "CHECKUP_HIST"),
-                            ),
-                          ),
-                          const SizedBox(width: 25),
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.event_available_outlined,
-                              title: widget.isEnglish
-                                  ? 'APPOINTMENT'
-                                  : 'TEMU JANJI',
-                              onTap: () =>
-                                  setState(() => _currentView = "APPT_HIST"),
-                            ),
-                          ),
-                          const SizedBox(width: 25),
-                          Expanded(
-                            child: GlassBentoCard(
-                              icon: Icons.biotech_outlined,
-                              title: widget.isEnglish
-                                  ? 'RESERVATION\nSTATUS'
-                                  : 'STATUS\nTEMPAHAN',
-                              onTap: () =>
-                                  setState(() => _currentView = "EQUIP_HIST"),
-                            ),
-                          ),
-                        ],
+                      child: _buildBentoCard(
+                        icon: Icons.wheelchair_pickup_outlined,
+                        title: widget.isEnglish
+                            ? 'MEDICAL EQUIPMENT\nRESERVATION'
+                            : 'TEMPAHAN PERALATAN\nPERUBATAN',
+                        onTap: () =>
+                            setState(() => _currentView = "EQUIP_RES"),
+                        isRestricted: widget.isGuest,
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 25),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _buildBentoCard(
+                        icon: widget.isGuest ? Icons.directions_walk_outlined : Icons.history_outlined,
+                        title: widget.isGuest
+                            ? (widget.isEnglish ? 'WALK-IN' : 'WALK-IN (TIDAK\nBERJADUAL)')
+                            : (widget.isEnglish ? 'HEALTH RECORD' : 'REKOD KESIHATAN'),
+                        onTap: () =>
+                            setState(() => _currentView = widget.isGuest ? "WALK_IN_TRIAGE" : "CHECKUP_HIST"),
+                        isRestricted: false,
+                      ),
+                    ),
+                    const SizedBox(width: 25),
+                    Expanded(
+                      child: _buildBentoCard(
+                        icon: Icons.event_available_outlined,
+                        title: widget.isEnglish
+                            ? 'APPOINTMENT'
+                            : 'TEMU JANJI',
+                        onTap: () =>
+                            setState(() => _currentView = "APPT_HIST"),
+                        isRestricted: widget.isGuest,
+                      ),
+                    ),
+                    const SizedBox(width: 25),
+                    Expanded(
+                      child: _buildBentoCard(
+                        icon: Icons.biotech_outlined,
+                        title: widget.isEnglish
+                            ? 'RESERVATION\nSTATUS'
+                            : 'STATUS\nTEMPAHAN',
+                        onTap: () =>
+                            setState(() => _currentView = "EQUIP_HIST"),
+                        isRestricted: widget.isGuest,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -436,7 +481,13 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   ],
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 30),
+              Container(
+                height: 40,
+                width: 1,
+                color: Colors.white.withOpacity(0.2),
+              ),
+              const SizedBox(width: 30),
               Row(
                 children: [
                   Container(
@@ -460,33 +511,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   ),
                 ],
               ),
-              const SizedBox(width: 30),
-              Container(
-                height: 40,
-                width: 1,
-                color: Colors.white.withOpacity(0.2),
-              ),
-              const SizedBox(width: 30),
-              Text(
-                widget.userName.toUpperCase(),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 20),
-              const CircleAvatar(
-                radius: 22,
-                backgroundColor: Color(0xFF1B64F2),
-                child: Icon(Icons.person, color: Colors.white, size: 26),
-              ),
-              const SizedBox(width: 30),
-              Container(
-                height: 40,
-                width: 1,
-                color: Colors.white.withOpacity(0.2),
-              ),
+              const Spacer(),
               const SizedBox(width: 30),
               EmergencyHelpButton(
                 isEnglish: widget.isEnglish,
@@ -607,13 +632,13 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: Colors.white.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: _isPressed
                       ? const Color(0xFF06B6D4)
-                      : Colors.white.withOpacity(0.1),
-                  width: _isPressed ? 2 : 1,
+                      : const Color(0xFF1E293B),
+                  width: _isPressed ? 2.0 : 1.0,
                 ),
                 boxShadow: _isPressed
                     ? [

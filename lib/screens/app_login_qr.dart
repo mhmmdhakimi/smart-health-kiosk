@@ -1,3 +1,4 @@
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -82,7 +83,7 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
+        NoAnimRoute(page: const LanguageSelectionPage()),
         (_) => false,
       );
     }
@@ -151,8 +152,7 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(
-                builder: (_) => KioskDashboard(
+              NoAnimRoute(page: KioskDashboard(
                   userName: studentName.toUpperCase(),
                   userId: studentId,
                   isGuest: false,

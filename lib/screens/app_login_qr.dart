@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../widgets/emergency_button.dart';
 import 'language_selection.dart';
-import 'student_verification.dart';
 import 'kiosk_dashboard.dart';
 
 class AppLoginQrPage extends StatefulWidget {
@@ -387,11 +386,7 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                                 backgroundColor: Colors.cyanAccent.withOpacity(0.1),
                               ),
                               onPressed: () {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(builder: (c) => StudentVerificationPage(isEnglish: widget.isEnglish)),
-                                  (route) => false,
-                                );
+                                Navigator.pop(context);
                               },
                               icon: const Icon(Icons.cancel_outlined),
                               label: Text(

@@ -3,11 +3,13 @@ import 'dart:ui';
 import '../widgets/emergency_button.dart';
 import 'kiosk_login.dart';
 import 'app_login_qr.dart';
-import 'student_verification.dart';
+import 'language_selection.dart';
+import 'kiosk_dashboard.dart';
+import 'guest_qr.dart';
 
-class WelcomeSelectionPage extends StatelessWidget {
+class WelcomeSelectionScreen extends StatelessWidget {
   final bool isEnglish;
-  const WelcomeSelectionPage({super.key, required this.isEnglish});
+  const WelcomeSelectionScreen({super.key, required this.isEnglish});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class WelcomeSelectionPage extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () => Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => StudentVerificationPage(isEnglish: isEnglish)),
+                  MaterialPageRoute(builder: (_) => const LanguageSelectionPage()),
                 ),
                 icon: const Icon(Icons.arrow_back, size: 28, color: Colors.white),
                 label: Text(
@@ -37,37 +39,54 @@ class WelcomeSelectionPage extends StatelessWidget {
                 ),
               ),
             ),
-            Center(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     isEnglish ? "Select Login Method" : "Pilih Kaedah Log Masuk", 
+                    textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white)
                   ),
                   const SizedBox(height: 10),
                   Text(
                     isEnglish ? "How would you like to log in?" : "Bagaimana anda ingin log masuk?", 
+                    textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 20, color: Colors.white70)
                   ),
                   const SizedBox(height: 60),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _BentoLoginCard(
-                        title: isEnglish ? "Student Card" : "Kad Pelajar",
-                        subtext: isEnglish ? "TAP PHYSICAL CARD ON SCANNER" : "SENTUH KAD FIZIKAL PADA PENGIMBAS",
-                        icon: Icons.vignette_rounded,
-                        auraColor: const Color(0xFF1B64F2),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: isEnglish))),
+                      Expanded(
+                        child: _BentoLoginCard(
+                          title: isEnglish ? "Student Card" : "Kad Pelajar",
+                          subtext: isEnglish ? "TAP PHYSICAL CARD ON SCANNER" : "SENTUH KAD FIZIKAL PADA PENGIMBAS",
+                          icon: Icons.vignette_rounded,
+                          auraColor: const Color(0xFF1B64F2),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => KioskLoginPage(isEnglish: isEnglish))),
+                        ),
                       ),
-                      const SizedBox(width: 40),
-                      _BentoLoginCard(
-                        title: isEnglish ? "UniMAP Health App" : "Aplikasi UniMAP Health",
-                        subtext: isEnglish ? "SCAN QR LINK WITH PHONE" : "IMBAS KOD QR DENGAN TELEFON",
-                        icon: Icons.phonelink_setup_rounded,
-                        auraColor: const Color(0xFF8B5CF6),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => AppLoginQrPage(isEnglish: isEnglish))),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: _BentoLoginCard(
+                          title: isEnglish ? "Mobile App" : "Aplikasi Mudah Alih",
+                          subtext: isEnglish ? "SCAN QR LINK WITH PHONE" : "IMBAS KOD QR DENGAN TELEFON",
+                          icon: Icons.phonelink_setup_rounded,
+                          auraColor: const Color(0xFF8B5CF6),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => AppLoginQrPage(isEnglish: isEnglish))),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: _BentoLoginCard(
+                          title: isEnglish ? "Guest Access" : "Akses Tetamu",
+                          subtext: isEnglish ? "PROCEED WITHOUT ACCOUNT" : "TERUSKAN TANPA AKAUN",
+                          icon: Icons.person_outline_rounded,
+                          auraColor: const Color(0xFF10B981),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => GuestQrPage(isEnglish: isEnglish))),
+                        ),
                       ),
                     ],
                   ),
@@ -122,9 +141,9 @@ class _BentoLoginCardState extends State<_BentoLoginCard> {
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
-            width: 340,
             height: 380,
-            padding: const EdgeInsets.all(32),
+            constraints: const BoxConstraints(minHeight: 250),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.04),
               borderRadius: BorderRadius.circular(24),
@@ -151,22 +170,22 @@ class _BentoLoginCardState extends State<_BentoLoginCard> {
                   ),
                   child: Icon(widget.icon, color: widget.auraColor, size: 70),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   widget.subtext,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.white.withOpacity(0.6),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.1,

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/email_service.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class EquipmentScreen extends StatefulWidget {
   final String userId;
@@ -29,44 +30,287 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   List<String> get _loanReasons => widget.isEnglish ? ['Post-Surgery Recovery', 'Chronic Condition', 'Temporary Injury', 'Follow-up Treatment', 'Other'] : ['Pemulihan Selepas Pembedahan', 'Keadaan Kronik', 'Kecederaan Sementara', 'Rawatan Susulan', 'Lain-lain'];
   List<String> get _equipList => widget.isEnglish ? ["Wheelchair", "Crutches", "Nebulizer", "First Aid Kit", "Anatomical Model", "Digital Thermometer", "Blood Pressure Cuff"] : ["Kerusi Roda", "Tongkat", "Nebulizer", "Peti Pertolongan Cemas", "Model Anatomi", "Termometer Digital", "Alat Tekanan Darah"];
 
-  InputDecoration _dropdownDecor(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white54),
-      filled: true, 
-      fillColor: Colors.white.withOpacity(0.05), 
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15), 
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none), 
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.cyanAccent, width: 1.5)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.redAccent, width: 1.5)),
+  Widget _buildFieldSelector(String label, String? value, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.cyanAccent.withOpacity(0.5), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              value ?? label,
+              style: TextStyle(
+                color: value == null ? Colors.white54 : Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            const Icon(Icons.arrow_drop_down, color: Colors.cyanAccent),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildDateDropdownRow(String title, String? day, String? month, String? year, ValueChanged<String?> onDayChanged, ValueChanged<String?> onMonthChanged, ValueChanged<String?> onYearChanged) {
+  void _showBottomSheetSelector({required String title, required List<String> options, required ValueChanged<String> onSelected}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white38,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Text(title, style: const TextStyle(color: Colors.cyanAccent, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        final option = options[index];
+                        return ListTile(
+                          title: Text(option, style: const TextStyle(color: Colors.white)),
+                          tileColor: Colors.white.withOpacity(0.02),
+                          onTap: () {
+                            onSelected(option);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<DateTime?> _showTouchFriendlyDatePicker(BuildContext context, {required DateTime initialDate, required DateTime firstDate}) async {
+    return showModalBottomSheet<DateTime>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        DateTime focusedDay = initialDate;
+        DateTime? selectedDay = initialDate;
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.90,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      border: Border(
+                        top: BorderSide(color: const Color(0xFF06B6D4).withOpacity(0.8), width: 1),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 15),
+                        Container(
+                          width: 50,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          widget.isEnglish ? "Select Date" : "Pilih Tarikh",
+                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: TableCalendar(
+                              firstDay: firstDate,
+                              lastDay: DateTime.now().add(const Duration(days: 365)),
+                              focusedDay: focusedDay,
+                              selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+                              shouldFillViewport: true,
+                              daysOfWeekHeight: 60.0,
+                              availableGestures: AvailableGestures.horizontalSwipe,
+                              headerStyle: const HeaderStyle(
+                                formatButtonVisible: false,
+                                titleCentered: true,
+                                titleTextStyle: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                                leftChevronIcon: Icon(Icons.chevron_left, color: Colors.cyanAccent, size: 36),
+                                rightChevronIcon: Icon(Icons.chevron_right, color: Colors.cyanAccent, size: 36),
+                              ),
+                              calendarStyle: CalendarStyle(
+                                defaultTextStyle: const TextStyle(fontSize: 22, color: Colors.white),
+                                weekendTextStyle: const TextStyle(fontSize: 22, color: Colors.white70),
+                                outsideTextStyle: const TextStyle(fontSize: 18, color: Colors.white38),
+                                disabledTextStyle: const TextStyle(fontSize: 18, color: Colors.white38),
+                                todayDecoration: BoxDecoration(
+                                  border: Border.all(color: Colors.cyanAccent, width: 2),
+                                  shape: BoxShape.circle,
+                                ),
+                                todayTextStyle: const TextStyle(fontSize: 22, color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                                selectedDecoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF06B6D4), Color(0xFF1B64F2)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  shape: BoxShape.rectangle,
+                                ),
+                                selectedTextStyle: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                              daysOfWeekStyle: const DaysOfWeekStyle(
+                                weekdayStyle: TextStyle(fontSize: 18, color: Colors.white70),
+                                weekendStyle: TextStyle(fontSize: 18, color: Colors.white54),
+                              ),
+                              onDaySelected: (selected, focused) {
+                                setSheetState(() {
+                                  selectedDay = selected;
+                                  focusedDay = focused;
+                                });
+                                Future.delayed(const Duration(milliseconds: 250), () {
+                                  if (mounted) Navigator.pop(context, selectedDay);
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
+    final DateTime now = DateTime.now();
+    DateTime firstDate = DateTime(now.year, now.month, now.day);
+    DateTime initialDate = firstDate;
+    
+    if (!isStart && _sDay != null && _sMonth != null && _sYear != null) {
+      int startMonthIndex = _monthsList.indexOf(_sMonth!) + 1;
+      firstDate = DateTime(int.parse(_sYear!), startMonthIndex, int.parse(_sDay!));
+      initialDate = firstDate;
+    }
+
+    final DateTime? picked = await _showTouchFriendlyDatePicker(
+      context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _sDay = picked.day.toString();
+          _sMonth = _monthsList[picked.month - 1];
+          _sYear = picked.year.toString();
+          
+          if (_eDay != null && _eMonth != null && _eYear != null) {
+            int endMonthIndex = _monthsList.indexOf(_eMonth!) + 1;
+            DateTime endDate = DateTime(int.parse(_eYear!), endMonthIndex, int.parse(_eDay!));
+            if (endDate.isBefore(picked)) {
+               _eDay = null; _eMonth = null; _eYear = null;
+            }
+          }
+        } else {
+          _eDay = picked.day.toString();
+          _eMonth = _monthsList[picked.month - 1];
+          _eYear = picked.year.toString();
+        }
+      });
+    }
+  }
+
+  Widget _buildDateFieldRow(String title, bool isStart) {
+    String? day = isStart ? _sDay : _eDay;
+    String? month = isStart ? _sMonth : _eMonth;
+    String? year = isStart ? _sYear : _eYear;
+    String displayDate = (day != null && month != null && year != null) ? "$day $month $year" : (widget.isEnglish ? "Select Date" : "Pilih Tarikh");
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.cyanAccent, letterSpacing: 1.2)), const SizedBox(height: 10),
-        Row(children: [
-            Expanded(flex: 2, child: DropdownButtonFormField<String>(
-              dropdownColor: const Color(0xFF111827),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: _dropdownDecor(widget.isEnglish ? "Day" : "Hari"), 
-              initialValue: day, items: _daysList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: onDayChanged, validator: (v) => v == null ? "*" : null
-            )), const SizedBox(width: 10),
-            Expanded(flex: 4, child: DropdownButtonFormField<String>(
-              dropdownColor: const Color(0xFF111827),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: _dropdownDecor(widget.isEnglish ? "Month" : "Bulan"), 
-              initialValue: month, items: _monthsList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: onMonthChanged, validator: (v) => v == null ? "*" : null
-            )), const SizedBox(width: 10),
-            Expanded(flex: 3, child: DropdownButtonFormField<String>(
-              dropdownColor: const Color(0xFF111827),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: _dropdownDecor(widget.isEnglish ? "Year" : "Tahun"), 
-              initialValue: year, items: _yearsList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), onChanged: onYearChanged, validator: (v) => v == null ? "*" : null
-            )),
-          ]),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.cyanAccent, letterSpacing: 1.2)), 
+        const SizedBox(height: 10),
+        InkWell(
+          onTap: () => _selectDate(context, isStart),
+          borderRadius: BorderRadius.circular(15),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.cyanAccent.withOpacity(0.5), width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  displayDate,
+                  style: TextStyle(
+                    color: (day != null && month != null && year != null) ? Colors.white : Colors.white54,
+                    fontSize: 18,
+                  ),
+                ),
+                const Icon(Icons.calendar_month_outlined, color: Colors.cyanAccent, size: 28),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -98,18 +342,24 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(flex: 2, child: DropdownButtonFormField<String>(
-                              dropdownColor: const Color(0xFF111827),
-                              style: const TextStyle(color: Colors.white, fontSize: 16),
-                              decoration: _dropdownDecor(widget.isEnglish ? "Equipment Type" : "Jenis Peralatan"), 
-                              items: _equipList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), initialValue: _selectedEquip, onChanged: (v) => _selectedEquip = v, validator: (v) => v == null ? "*" : null
+                            Expanded(flex: 2, child: _buildFieldSelector(
+                              widget.isEnglish ? "Equipment Type" : "Jenis Peralatan",
+                              _selectedEquip,
+                              () => _showBottomSheetSelector(
+                                title: widget.isEnglish ? "Select Equipment Type" : "Pilih Jenis Peralatan",
+                                options: _equipList,
+                                onSelected: (v) => setState(() => _selectedEquip = v),
+                              ),
                             )),
                             const SizedBox(width: 25),
-                            Expanded(flex: 1, child: DropdownButtonFormField<String>(
-                              dropdownColor: const Color(0xFF111827),
-                              style: const TextStyle(color: Colors.white, fontSize: 16),
-                              decoration: _dropdownDecor(widget.isEnglish ? "Quantity" : "Kuantiti"), 
-                              items: ["1", "2", "3", "4", "5"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), initialValue: _selectedQuantity, onChanged: (v) => _selectedQuantity = v, validator: (v) => v == null ? "*" : null
+                            Expanded(flex: 1, child: _buildFieldSelector(
+                              widget.isEnglish ? "Quantity" : "Kuantiti",
+                              _selectedQuantity,
+                              () => _showBottomSheetSelector(
+                                title: widget.isEnglish ? "Select Quantity" : "Pilih Kuantiti",
+                                options: ["1", "2", "3", "4", "5"],
+                                onSelected: (v) => setState(() => _selectedQuantity = v),
+                              ),
                             )),
                           ],
                         ),
@@ -117,17 +367,20 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _buildDateDropdownRow(widget.isEnglish ? "START DATE" : "TARIKH MULA", _sDay, _sMonth, _sYear, (v) => setState(() => _sDay = v), (v) => setState(() => _sMonth = v), (v) => setState(() => _sYear = v))),
+                            Expanded(child: _buildDateFieldRow(widget.isEnglish ? "START DATE" : "TARIKH MULA", true)),
                             const SizedBox(width: 35),
-                            Expanded(child: _buildDateDropdownRow(widget.isEnglish ? "END DATE" : "TARIKH TAMAT", _eDay, _eMonth, _eYear, (v) => setState(() => _eDay = v), (v) => setState(() => _eMonth = v), (v) => setState(() => _eYear = v))),
+                            Expanded(child: _buildDateFieldRow(widget.isEnglish ? "END DATE" : "TARIKH TAMAT", false)),
                           ],
                         ),
                         const SizedBox(height: 35),
-                        DropdownButtonFormField<String>(
-                          dropdownColor: const Color(0xFF111827),
-                          style: const TextStyle(color: Colors.white, fontSize: 16),
-                          decoration: _dropdownDecor(widget.isEnglish ? "Reason for Loan" : "Sebab Pinjaman"), 
-                          items: _loanReasons.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(), initialValue: _selectedLoanReason, onChanged: (v) => _selectedLoanReason = v, validator: (v) => v == null ? "*" : null
+                        _buildFieldSelector(
+                          widget.isEnglish ? "Reason for Loan" : "Sebab Pinjaman",
+                          _selectedLoanReason,
+                          () => _showBottomSheetSelector(
+                            title: widget.isEnglish ? "Select Reason" : "Pilih Sebab",
+                            options: _loanReasons,
+                            onSelected: (v) => setState(() => _selectedLoanReason = v),
+                          ),
                         ),
                         const SizedBox(height: 50),
                         Center(
@@ -143,7 +396,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 50)
                               ),
                               onPressed: () {
-                                if (_equipFKey.currentState!.validate()) {
+                                if (_selectedEquip != null && _selectedQuantity != null && _sDay != null && _eDay != null && _selectedLoanReason != null) {
                                 int startMonthIndex = _monthsList.indexOf(_sMonth!) + 1; int endMonthIndex = _monthsList.indexOf(_eMonth!) + 1;
                                 DateTime startDate = DateTime(int.parse(_sYear!), startMonthIndex, int.parse(_sDay!));
                                 DateTime endDate = DateTime(int.parse(_eYear!), endMonthIndex, int.parse(_eDay!));

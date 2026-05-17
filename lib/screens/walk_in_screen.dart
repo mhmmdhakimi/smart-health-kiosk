@@ -35,15 +35,18 @@ class _WalkInScreenState extends State<WalkInScreen> {
       int weekOfMonth = ((now.day - 1) / 7).floor() + 1;
       if (weekOfMonth == 2 || weekOfMonth == 4) return false;
       if (now.hour >= 8 &&
-          (now.hour < 12 || (now.hour == 12 && now.minute <= 15)))
+          (now.hour < 12 || (now.hour == 12 && now.minute <= 15))) {
         return true;
+      }
       if ((now.hour == 14 && now.minute >= 45) ||
-          (now.hour >= 15 && now.hour < 17))
+          (now.hour >= 15 && now.hour < 17)) {
         return true;
+      }
       return false;
     }
-    if ((now.hour >= 8 && now.hour < 13) || (now.hour >= 14 && now.hour < 17))
+    if ((now.hour >= 8 && now.hour < 13) || (now.hour >= 14 && now.hour < 17)) {
       return true;
+    }
     return false;
   }
 
@@ -51,7 +54,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (c) => const Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
+      builder: (c) => const Center(
+        child: CircularProgressIndicator(color: Colors.cyanAccent),
+      ),
     );
     final activeTicketQuery = await FirebaseDatabase.instance
         .ref('walk_ins')
@@ -75,12 +80,14 @@ class _WalkInScreenState extends State<WalkInScreen> {
               bool isSameUser = v['patient_id'] == widget.userId;
               if (widget.isGuest &&
                   widget.guestPhone != null &&
-                  v['phone'] == widget.guestPhone)
+                  v['phone'] == widget.guestPhone) {
                 isSameUser = true;
+              }
               if (isSameUser &&
                   (v['status'] == 'Waiting' || v['status'] == 'Serving') &&
-                  (v['timestamp'] ?? 0) >= startOfTodayMs)
+                  (v['timestamp'] ?? 0) >= startOfTodayMs) {
                 activeTickets.add(v);
+              }
             }
           }
         }
@@ -94,7 +101,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
             backgroundColor: const Color(0xFF111827),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
-              side: const BorderSide(color: Colors.amberAccent)
+              side: const BorderSide(color: Colors.amberAccent),
             ),
             title: Text(
               widget.isEnglish ? "Active Ticket Found" : "Tiket Aktif Ditemui",
@@ -114,7 +121,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amberAccent.withOpacity(0.2),
                   foregroundColor: Colors.amberAccent,
-                  side: const BorderSide(color: Colors.amberAccent)
+                  side: const BorderSide(color: Colors.amberAccent),
                 ),
                 onPressed: () => Navigator.pop(c),
                 child: const Text("OK"),
@@ -142,7 +149,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (c) => const Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
+      builder: (c) => const Center(
+        child: CircularProgressIndicator(color: Colors.cyanAccent),
+      ),
     );
     int queueNumber = 1000;
     bool success = false;
@@ -210,10 +219,15 @@ class _WalkInScreenState extends State<WalkInScreen> {
     if (success && mounted) {
       _showQueueNumberDialog(queueNumber, name, reason);
     } else if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.redAccent,
-        content: Text("Error: $errMsg", style: const TextStyle(color: Colors.white))
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text(
+            "Error: $errMsg",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      );
     }
   }
 
@@ -225,13 +239,17 @@ class _WalkInScreenState extends State<WalkInScreen> {
         backgroundColor: const Color(0xFF111827),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5))
+          side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5)),
         ),
         contentPadding: const EdgeInsets.all(40),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.cyanAccent, size: 80),
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.cyanAccent,
+              size: 80,
+            ),
             const SizedBox(height: 20),
             Text(
               widget.isEnglish
@@ -251,7 +269,12 @@ class _WalkInScreenState extends State<WalkInScreen> {
                 fontSize: 90,
                 fontWeight: FontWeight.bold,
                 color: Colors.cyanAccent,
-                shadows: [Shadow(color: Colors.cyanAccent.withOpacity(0.5), blurRadius: 20)]
+                shadows: [
+                  Shadow(
+                    color: Colors.cyanAccent.withOpacity(0.5),
+                    blurRadius: 20,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 10),
@@ -267,8 +290,13 @@ class _WalkInScreenState extends State<WalkInScreen> {
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
                     backgroundColor: Colors.redAccent.withOpacity(0.1),
-                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 25,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.pop(c);
@@ -293,7 +321,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
                       horizontal: 35,
                       vertical: 15,
                     ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.pop(c);
@@ -335,7 +365,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
             fontSize: 42,
             fontWeight: FontWeight.bold,
             color: valColor,
-            shadows: [Shadow(color: valColor.withOpacity(0.5), blurRadius: 15)]
+            shadows: [Shadow(color: valColor.withOpacity(0.5), blurRadius: 15)],
           ),
         ),
       ],
@@ -352,14 +382,18 @@ class _WalkInScreenState extends State<WalkInScreen> {
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: widget.onBack,
-            icon: const Icon(Icons.arrow_back, size: 28, color: Colors.cyanAccent),
+            icon: const Icon(
+              Icons.arrow_back,
+              size: 28,
+              color: Colors.cyanAccent,
+            ),
             label: Text(
               widget.isEnglish ? "Back" : "Kembali",
               style: const TextStyle(fontSize: 18, color: Colors.cyanAccent),
             ),
           ),
         ),
-        
+
         // ── LIVE CLINIC STATUS GLASS PANEL ───────────────────────────────────
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
@@ -381,7 +415,8 @@ class _WalkInScreenState extends State<WalkInScreen> {
                   int currentServing = 1000;
                   int estWaitTime = 0;
                   int? myQueueNo;
-                  if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+                  if (snapshot.hasData &&
+                      snapshot.data!.snapshot.value != null) {
                     var dataMap =
                         snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
                     List<dynamic> docs = [];
@@ -395,8 +430,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
                         for (var v in catData.values) {
                           if (v is Map &&
                               (v['timestamp'] ?? 0) >=
-                                  startOfToday.millisecondsSinceEpoch)
+                                  startOfToday.millisecondsSinceEpoch) {
                             docs.add(v);
+                          }
                         }
                       }
                     });
@@ -408,8 +444,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
                         .toList();
                     if (servingDocs.isNotEmpty) {
                       servingDocs.sort(
-                        (a, b) =>
-                            (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0),
+                        (a, b) => (b['timestamp'] ?? 0).compareTo(
+                          a['timestamp'] ?? 0,
+                        ),
                       );
                       currentServing =
                           int.tryParse(
@@ -422,8 +459,9 @@ class _WalkInScreenState extends State<WalkInScreen> {
                           .toList();
                       if (completedDocs.isNotEmpty) {
                         completedDocs.sort(
-                          (a, b) =>
-                              (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0),
+                          (a, b) => (b['timestamp'] ?? 0).compareTo(
+                            a['timestamp'] ?? 0,
+                          ),
                         );
                         currentServing =
                             int.tryParse(
@@ -441,10 +479,11 @@ class _WalkInScreenState extends State<WalkInScreen> {
                                   map['status'] == 'Serving'),
                         )
                         .toList();
-                    if (myActiveTickets.isNotEmpty)
+                    if (myActiveTickets.isNotEmpty) {
                       myQueueNo = int.tryParse(
                         myActiveTickets.first['queue_number'].toString(),
                       );
+                    }
                   }
 
                   return Column(
@@ -453,8 +492,18 @@ class _WalkInScreenState extends State<WalkInScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 12, height: 12, 
-                            decoration: BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.redAccent, blurRadius: 8)])
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.redAccent,
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -466,7 +515,12 @@ class _WalkInScreenState extends State<WalkInScreen> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: 2.0,
-                              shadows: [Shadow(color: Colors.white.withOpacity(0.5), blurRadius: 10)]
+                              shadows: [
+                                Shadow(
+                                  color: Colors.white.withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -478,9 +532,15 @@ class _WalkInScreenState extends State<WalkInScreen> {
                           _buildStatusItem(
                             widget.isEnglish ? "YOUR TICKET" : "TIKET ANDA",
                             myQueueNo != null ? "$myQueueNo" : "--",
-                            myQueueNo != null ? Colors.greenAccent : Colors.white54,
+                            myQueueNo != null
+                                ? Colors.greenAccent
+                                : Colors.white54,
                           ),
-                          Container(width: 1, height: 70, color: Colors.white.withOpacity(0.2)),
+                          Container(
+                            width: 1,
+                            height: 70,
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                           _buildStatusItem(
                             widget.isEnglish
                                 ? "CURRENT SERVING"
@@ -488,15 +548,27 @@ class _WalkInScreenState extends State<WalkInScreen> {
                             currentServing > 1000 ? "$currentServing" : "--",
                             Colors.cyanAccent,
                           ),
-                          Container(width: 1, height: 70, color: Colors.white.withOpacity(0.2)),
+                          Container(
+                            width: 1,
+                            height: 70,
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                           _buildStatusItem(
-                            widget.isEnglish ? "PEOPLE WAITING" : "ORANG MENUNGGU",
+                            widget.isEnglish
+                                ? "PEOPLE WAITING"
+                                : "ORANG MENUNGGU",
                             "$peopleWaiting",
                             Colors.amberAccent,
                           ),
-                          Container(width: 1, height: 70, color: Colors.white.withOpacity(0.2)),
+                          Container(
+                            width: 1,
+                            height: 70,
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                           _buildStatusItem(
-                            widget.isEnglish ? "EST. WAIT TIME" : "ANGGARAN MASA",
+                            widget.isEnglish
+                                ? "EST. WAIT TIME"
+                                : "ANGGARAN MASA",
                             widget.isEnglish
                                 ? "$estWaitTime mins"
                                 : "$estWaitTime minit",
@@ -527,7 +599,12 @@ class _WalkInScreenState extends State<WalkInScreen> {
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        shadows: [Shadow(color: Colors.cyanAccent.withOpacity(0.3), blurRadius: 10)]
+                        shadows: [
+                          Shadow(
+                            color: Colors.cyanAccent.withOpacity(0.3),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -598,7 +675,12 @@ class _WalkInScreenState extends State<WalkInScreen> {
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.redAccent,
-                        shadows: [Shadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 10)]
+                        shadows: [
+                          Shadow(
+                            color: Colors.redAccent.withOpacity(0.5),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -620,7 +702,11 @@ class _WalkInTriageCard extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _WalkInTriageCard({required this.title, required this.icon, required this.onTap});
+  const _WalkInTriageCard({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   State<_WalkInTriageCard> createState() => _WalkInTriageCardState();
@@ -652,19 +738,37 @@ class _WalkInTriageCardState extends State<_WalkInTriageCard> {
                 color: Colors.white.withOpacity(0.04),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _isPressed ? const Color(0xFF06B6D4) : Colors.white.withOpacity(0.1),
-                  width: _isPressed ? 2 : 1
+                  color: _isPressed
+                      ? const Color(0xFF06B6D4)
+                      : Colors.white.withOpacity(0.1),
+                  width: _isPressed ? 2 : 1,
                 ),
-                boxShadow: _isPressed ? [BoxShadow(color: const Color(0xFF06B6D4).withOpacity(0.3), blurRadius: 20)] : [],
+                boxShadow: _isPressed
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF06B6D4).withOpacity(0.3),
+                          blurRadius: 20,
+                        ),
+                      ]
+                    : [],
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    widget.icon, 
-                    color: _isPressed ? const Color(0xFF06B6D4) : Colors.cyanAccent.withOpacity(0.8), 
+                    widget.icon,
+                    color: _isPressed
+                        ? const Color(0xFF06B6D4)
+                        : Colors.cyanAccent.withOpacity(0.8),
                     size: 45,
-                    shadows: _isPressed ? [Shadow(color: const Color(0xFF06B6D4), blurRadius: 10)] : []
+                    shadows: _isPressed
+                        ? [
+                            Shadow(
+                              color: const Color(0xFF06B6D4),
+                              blurRadius: 10,
+                            ),
+                          ]
+                        : [],
                   ),
                   const SizedBox(height: 15),
                   Padding(
@@ -676,7 +780,16 @@ class _WalkInTriageCardState extends State<_WalkInTriageCard> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: Colors.white,
-                        shadows: _isPressed ? [Shadow(color: const Color(0xFF06B6D4).withOpacity(0.8), blurRadius: 5)] : []
+                        shadows: _isPressed
+                            ? [
+                                Shadow(
+                                  color: const Color(
+                                    0xFF06B6D4,
+                                  ).withOpacity(0.8),
+                                  blurRadius: 5,
+                                ),
+                              ]
+                            : [],
                       ),
                     ),
                   ),

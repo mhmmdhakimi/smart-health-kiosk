@@ -770,13 +770,27 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (c) => AppointmentPage(
-                            department: "General Clinic",
-                            userName: widget.userName,
-                            userId: widget.userId,
-                            isGuest: false,
-                            isEnglish: widget.isEnglish,
-                            onLogOut: widget.onBack,
+                          builder: (c) => Scaffold(
+                            body: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                )
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(35),
+                                child: AppointmentPage(
+                                  userName: widget.userName,
+                                  userId: widget.userId,
+                                  isGuest: false,
+                                  isEnglish: widget.isEnglish,
+                                  onBack: () => Navigator.pop(c, "HOME"),
+                                  onLogOut: widget.onBack,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../widgets/emergency_button.dart';
-import 'student_verification.dart';
+import 'welcome_selection.dart';
 
 class LanguageSelectionPage extends StatelessWidget {
   const LanguageSelectionPage({super.key});
@@ -46,13 +46,13 @@ class LanguageSelectionPage extends StatelessWidget {
                       _LanguageCard(
                         title: "ENGLISH",
                         icon: Icons.language,
-                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const StudentVerificationPage(isEnglish: true))),
+                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const WelcomeSelectionScreen(isEnglish: true))),
                       ),
                       const SizedBox(width: 40),
                       _LanguageCard(
                         title: "BAHASA MELAYU",
                         icon: Icons.translate,
-                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const StudentVerificationPage(isEnglish: false))),
+                        onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const WelcomeSelectionScreen(isEnglish: false))),
                       ),
                     ],
                   )

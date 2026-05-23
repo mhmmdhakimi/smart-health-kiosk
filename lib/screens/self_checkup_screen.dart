@@ -1,4 +1,4 @@
-import '../utils/no_anim_route.dart';
+﻿import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -183,17 +183,17 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
-            backgroundColor: const Color(0xFF111827),
+            backgroundColor: const Color(0xFF133F85),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: Colors.greenAccent.withOpacity(0.5),
+                color: Colors.green.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
             title: const Icon(
               Icons.check_circle_outline,
-              color: Colors.greenAccent,
+              color: Colors.green,
               size: 60,
             ),
             content: Text(
@@ -213,7 +213,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   child: Text(
                     widget.isEnglish ? "OK" : "OK",
                     style: const TextStyle(
-                      color: Colors.greenAccent,
+                      color: Colors.green,
                       fontSize: 18,
                     ),
                   ),
@@ -307,17 +307,20 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.04),
-            border: Border.all(color: Colors.cyan.withOpacity(0.3), width: 1),
+            color: Colors.white.withValues(alpha: 0.04),
+            border: Border.all(
+              color: Colors.lightBlue.withValues(alpha: 0.3),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.cyan.withOpacity(0.2),
+                color: Colors.lightBlue.withValues(alpha: 0.2),
                 blurRadius: 40,
                 spreadRadius: 10,
               ),
             ],
           ),
-          child: Icon(icon, size: 100, color: Colors.cyan),
+          child: Icon(icon, size: 100, color: Colors.lightBlue),
         ),
         const SizedBox(height: 40),
 
@@ -340,10 +343,10 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
               width: 600,
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 40),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
+                color: Colors.white.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -361,7 +364,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.cyanAccent,
+                                color: Colors.lightBlueAccent,
                               ),
                             ),
                             const SizedBox(height: 15),
@@ -369,15 +372,19 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               borderRadius: BorderRadius.circular(10),
                               child: LinearProgressIndicator(
                                 value: _scanPercentage / 100.0,
-                                color: Colors.cyanAccent,
-                                backgroundColor: Colors.white.withOpacity(0.1),
+                                color: Colors.lightBlueAccent,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.1,
+                                ),
                                 minHeight: 12,
                               ),
                             ),
                           ] else ...[
                             LinearProgressIndicator(
-                              color: Colors.cyanAccent,
-                              backgroundColor: Colors.white.withOpacity(0.1),
+                              color: Colors.lightBlueAccent,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.1,
+                              ),
                               minHeight: 6,
                             ),
                           ],
@@ -412,8 +419,8 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
     bool isCompleted = activeStep > stepIndex;
     bool isActive = activeStep == stepIndex;
     Color color = isCompleted
-        ? Colors.greenAccent
-        : (isActive ? Colors.cyanAccent : Colors.white.withOpacity(0.2));
+        ? Colors.green
+        : (isActive ? Colors.lightBlueAccent : Colors.white.withValues(alpha: 0.2));
     return Column(
       children: [
         Container(
@@ -421,12 +428,19 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
           height: 50,
           decoration: BoxDecoration(
             color: isActive
-                ? color.withOpacity(0.2)
-                : (isCompleted ? color.withOpacity(0.2) : Colors.transparent),
+                ? color.withValues(alpha: 0.2)
+                : (isCompleted
+                      ? color.withValues(alpha: 0.2)
+                      : Colors.transparent),
             border: Border.all(color: color, width: 2),
             shape: BoxShape.circle,
             boxShadow: isActive || isCompleted
-                ? [BoxShadow(color: color.withOpacity(0.4), blurRadius: 10)]
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.4),
+                      blurRadius: 10,
+                    ),
+                  ]
                 : [],
           ),
           child: Icon(isCompleted ? Icons.check : icon, color: color, size: 24),
@@ -451,11 +465,13 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
       height: 4,
       margin: const EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
-        color: isCompleted ? Colors.greenAccent : Colors.white.withOpacity(0.2),
+        color: isCompleted
+            ? Colors.green
+            : Colors.white.withValues(alpha: 0.2),
         boxShadow: isCompleted
             ? [
                 BoxShadow(
-                  color: Colors.greenAccent.withOpacity(0.4),
+                  color: Colors.green.withValues(alpha: 0.4),
                   blurRadius: 10,
                 ),
               ]
@@ -493,9 +509,9 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
 
     bool isUnhealthy = (tempBad || spo2Bad || hrBad);
     Color borderColor = isUnhealthy
-        ? Colors.amber.withOpacity(0.4)
-        : Colors.cyan.withOpacity(0.3);
-    Color glowColor = isUnhealthy ? Colors.amber : Colors.cyan;
+        ? Colors.amber.withValues(alpha: 0.4)
+        : Colors.lightBlue.withValues(alpha: 0.3);
+    Color glowColor = isUnhealthy ? Colors.amber : Colors.lightBlue;
 
     double score = 100;
     if (temp >= 37.5) score -= 15;
@@ -541,12 +557,12 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: borderColor, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: glowColor.withOpacity(0.15),
+                        color: glowColor.withValues(alpha: 0.15),
                         blurRadius: 40,
                         spreadRadius: 5,
                       ),
@@ -579,7 +595,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                       Container(
                         width: 1,
                         height: 220,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                       ),
                       // Vitals Ranges
@@ -597,7 +613,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               140,
                               [
                                 Colors.lightBlueAccent,
-                                Colors.greenAccent,
+                                Colors.green,
                                 Colors.redAccent,
                               ],
                             ),
@@ -611,7 +627,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               40,
                               [
                                 Colors.lightBlueAccent,
-                                Colors.greenAccent,
+                                Colors.green,
                                 Colors.redAccent,
                               ],
                             ),
@@ -625,8 +641,8 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               100,
                               [
                                 Colors.redAccent,
-                                Colors.greenAccent,
-                                Colors.greenAccent,
+                                Colors.green,
+                                Colors.green,
                               ],
                             ),
                           ],
@@ -635,7 +651,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                       Container(
                         width: 1,
                         height: 220,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                       ),
                       // Basics
@@ -676,7 +692,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
             if (!isUnhealthy) ...[
               const Icon(
                 Icons.check_circle,
-                color: Colors.greenAccent,
+                color: Colors.green,
                 size: 50,
               ),
               const SizedBox(height: 10),
@@ -686,7 +702,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                     : "Semua vital adalah normal.",
                 style: const TextStyle(
                   fontSize: 18,
-                  color: Colors.greenAccent,
+                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -696,12 +712,12 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                 height: 55,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.1),
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                       side: const BorderSide(
-                        color: Colors.greenAccent,
+                        color: Colors.green,
                         width: 1,
                       ),
                     ),
@@ -725,7 +741,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   vertical: 15,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
+                  color: Colors.amber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(color: Colors.amber, width: 1),
                 ),
@@ -766,18 +782,22 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                         ? "Book Clinical Appointment"
                         : "Tempah Janji Temu Klinik",
                     Icons.event_available_rounded,
-                    Colors.cyan,
+                    Colors.lightBlue,
                     () {
                       Navigator.push(
                         context,
-                        NoAnimRoute(page: Scaffold(
+                        NoAnimRoute(
+                          page: Scaffold(
                             body: Container(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+                                  colors: [
+                                    Color(0xFF0A2249),
+                                    Color(0xFF133F85),
+                                  ],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
-                                )
+                                ),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(35),
@@ -806,7 +826,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
   }
 
   Widget _buildHealthGauge(double score) {
-    Color color = score >= 90 ? Colors.cyanAccent : Colors.amber;
+    Color color = score >= 90 ? Colors.lightBlueAccent : Colors.amber;
     return Container(
       padding: const EdgeInsets.all(10),
       child: Stack(
@@ -820,7 +840,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
               strokeWidth: 12,
               strokeCap: StrokeCap.round,
               color: color,
-              backgroundColor: Colors.white.withOpacity(0.05),
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
             ),
           ),
           Column(
@@ -834,7 +854,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   color: color,
                   fontFamily: 'monospace',
                   shadows: [
-                    Shadow(color: color.withOpacity(0.5), blurRadius: 15),
+                    Shadow(color: color.withValues(alpha: 0.5), blurRadius: 15),
                   ],
                 ),
               ),
@@ -920,7 +940,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                       borderRadius: BorderRadius.circular(2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -945,9 +965,9 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -979,7 +999,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   " $unit",
                   style: TextStyle(
                     fontSize: 12,
-                    color: color.withOpacity(0.7),
+                    color: color.withValues(alpha: 0.7),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1004,12 +1024,12 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
         height: 85,
         padding: const EdgeInsets.symmetric(horizontal: 15),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               blurRadius: 10,
               spreadRadius: 2,
             ),
@@ -1020,7 +1040,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 28),
@@ -1048,7 +1068,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+            colors: [Color(0xFF0A2249), Color(0xFF133F85)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -1098,14 +1118,14 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                                 padding: const EdgeInsets.all(40),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.04),
+                                  color: Colors.white.withValues(alpha: 0.04),
                                   border: Border.all(
-                                    color: Colors.cyan.withOpacity(0.3),
+                                    color: Colors.lightBlue.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.cyan.withOpacity(0.2),
+                                      color: Colors.lightBlue.withValues(alpha: 0.2),
                                       blurRadius: 40,
                                       spreadRadius: 10,
                                     ),
@@ -1114,7 +1134,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                                 child: const Icon(
                                   Icons.monitor_heart,
                                   size: 100,
-                                  color: Colors.cyanAccent,
+                                  color: Colors.lightBlueAccent,
                                 ),
                               ),
                             ),
@@ -1149,17 +1169,23 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                             height: 70,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.cyan.withOpacity(0.2),
+                                backgroundColor: Colors.lightBlue.withValues(
+                                  alpha: 0.2,
+                                ),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(35),
                                   side: BorderSide(
-                                    color: Colors.cyanAccent.withOpacity(0.5),
+                                    color: Colors.lightBlueAccent.withValues(
+                                      alpha: 0.5,
+                                    ),
                                     width: 1,
                                   ),
                                 ),
                                 elevation: 0,
-                                shadowColor: Colors.cyanAccent.withOpacity(0.4),
+                                shadowColor: Colors.lightBlueAccent.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                               onPressed: _startSelfCheckup,
                               child: Text(
@@ -1170,7 +1196,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.5,
-                                  color: Colors.cyanAccent,
+                                  color: Colors.lightBlueAccent,
                                 ),
                               ),
                             ),

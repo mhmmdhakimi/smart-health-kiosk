@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -159,7 +159,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
       barrierLabel: "Dismiss",
       pageBuilder: (context, animation, secondaryAnimation) {
         return Scaffold(
-          backgroundColor: Colors.black.withOpacity(0.5),
+          backgroundColor: Colors.black.withValues(alpha: 0.5),
           body: Center(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
@@ -169,10 +169,10 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   width: 500,
                   padding: const EdgeInsets.all(40),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: Colors.cyanAccent.withOpacity(0.5),
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                       width: 1.5,
                     ),
                   ),
@@ -182,7 +182,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                       const Icon(
                         Icons.event_available,
                         size: 80,
-                        color: Colors.cyanAccent,
+                        color: Colors.lightBlueAccent,
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -192,7 +192,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.cyanAccent,
+                          color: Colors.lightBlueAccent,
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -229,7 +229,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                                   vertical: 20,
                                 ),
                                 side: BorderSide(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: Colors.white.withValues(alpha: 0.3),
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
@@ -252,11 +252,11 @@ class _AppointmentPageState extends State<AppointmentPage> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 20,
                                 ),
-                                backgroundColor: Colors.cyanAccent.withOpacity(
-                                  0.2,
+                                backgroundColor: Colors.lightBlueAccent.withValues(
+                                  alpha: 0.2,
                                 ),
                                 side: const BorderSide(
-                                  color: Colors.cyanAccent,
+                                  color: Colors.lightBlueAccent,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
@@ -269,7 +269,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                               child: Text(
                                 widget.isEnglish ? "CONFIRM" : "SAHKAN",
                                 style: const TextStyle(
-                                  color: Colors.cyanAccent,
+                                  color: Colors.lightBlueAccent,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -330,15 +330,15 @@ class _AppointmentPageState extends State<AppointmentPage> {
         context: context,
         barrierDismissible: false,
         builder: (c) => AlertDialog(
-          backgroundColor: const Color(0xFF111827),
+          backgroundColor: const Color(0xFF133F85),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: const BorderSide(color: Colors.greenAccent),
+            side: const BorderSide(color: Colors.green),
           ),
           title: Text(
             widget.isEnglish ? "Success!" : "Berjaya!",
             style: const TextStyle(
-              color: Colors.greenAccent,
+              color: Colors.green,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -365,9 +365,9 @@ class _AppointmentPageState extends State<AppointmentPage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyanAccent.withOpacity(0.2),
-                foregroundColor: Colors.cyanAccent,
-                side: const BorderSide(color: Colors.cyanAccent),
+                backgroundColor: Colors.lightBlueAccent.withValues(alpha: 0.2),
+                foregroundColor: Colors.lightBlueAccent,
+                side: const BorderSide(color: Colors.lightBlueAccent),
               ),
               onPressed: () {
                 Navigator.pop(c);
@@ -396,11 +396,11 @@ class _AppointmentPageState extends State<AppointmentPage> {
             icon: const Icon(
               Icons.arrow_back,
               size: 28,
-              color: Colors.cyanAccent,
+              color: Colors.lightBlueAccent,
             ),
             label: Text(
               widget.isEnglish ? "Back" : "Kembali",
-              style: const TextStyle(fontSize: 18, color: Colors.cyanAccent),
+              style: const TextStyle(fontSize: 18, color: Colors.lightBlueAccent),
             ),
           ),
         ),
@@ -416,7 +416,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   color: Colors.white,
                   shadows: [
                     Shadow(
-                      color: Colors.cyanAccent.withOpacity(0.5),
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                       blurRadius: 10,
                     ),
                   ],
@@ -430,10 +430,10 @@ class _AppointmentPageState extends State<AppointmentPage> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.1),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(
-                      color: Colors.redAccent.withOpacity(0.5),
+                      color: Colors.redAccent.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Text(
@@ -462,9 +462,11 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   margin: const EdgeInsets.only(right: 15),
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,9 +503,11 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 15),
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -522,9 +526,11 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   margin: const EdgeInsets.only(left: 15),
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: _buildTimeSlotSection(),
                 ),
@@ -556,19 +562,19 @@ class _AppointmentPageState extends State<AppointmentPage> {
             constraints: const BoxConstraints(minHeight: 100),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.cyan.withOpacity(0.1)
-                  : Colors.white.withOpacity(0.04),
+                  ? Colors.lightBlue.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFF06B6D4)
-                    : Colors.white.withOpacity(0.1),
+                    ? const Color(0xFF0EA5E9)
+                    : Colors.white.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF06B6D4).withOpacity(0.3),
+                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
                         blurRadius: 15,
                       ),
                     ]
@@ -579,7 +585,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                 Icon(
                   icon,
                   size: 40,
-                  color: isSelected ? Colors.cyanAccent : Colors.white54,
+                  color: isSelected ? Colors.lightBlueAccent : Colors.white54,
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -590,7 +596,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.cyanAccent : Colors.white,
+                      color: isSelected ? Colors.lightBlueAccent : Colors.white,
                     ),
                   ),
                 ),
@@ -610,7 +616,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
           icon: const Icon(
             Icons.chevron_left,
             size: 44,
-            color: Colors.cyanAccent,
+            color: Colors.lightBlueAccent,
           ),
           onPressed: () =>
               setState(() => fDate = DateTime(fDate.year, fDate.month - 1)),
@@ -623,7 +629,10 @@ class _AppointmentPageState extends State<AppointmentPage> {
             color: Colors.white,
             letterSpacing: 1.5,
             shadows: [
-              Shadow(color: Colors.cyanAccent.withOpacity(0.5), blurRadius: 10),
+              Shadow(
+                color: Colors.lightBlueAccent.withValues(alpha: 0.5),
+                blurRadius: 10,
+              ),
             ],
           ),
         ),
@@ -631,7 +640,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
           icon: const Icon(
             Icons.chevron_right,
             size: 44,
-            color: Colors.cyanAccent,
+            color: Colors.lightBlueAccent,
           ),
           onPressed: () =>
               setState(() => fDate = DateTime(fDate.year, fDate.month + 1)),
@@ -651,7 +660,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
               child: Text(
                 d,
                 style: const TextStyle(
-                  color: Colors.cyanAccent,
+                  color: Colors.lightBlueAccent,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -721,14 +730,14 @@ class _AppointmentPageState extends State<AppointmentPage> {
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? const LinearGradient(
-                                colors: [Color(0xFF06B6D4), Color(0xFF1B64F2)],
+                                colors: [Color(0xFF0EA5E9), Color(0xFF1B64F2)],
                               )
                             : null,
                         color: isSelected
                             ? null
                             : (isDisabled
                                   ? Colors.transparent
-                                  : Colors.white.withOpacity(0.05)),
+                                  : Colors.white.withValues(alpha: 0.05)),
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(
                           color: isSelected
@@ -741,7 +750,9 @@ class _AppointmentPageState extends State<AppointmentPage> {
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: Colors.cyanAccent.withOpacity(0.4),
+                                  color: Colors.lightBlueAccent.withValues(
+                                    alpha: 0.4,
+                                  ),
                                   blurRadius: 10,
                                 ),
                               ]
@@ -779,7 +790,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
             Icon(
               Icons.event_note,
               size: 80,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 20),
             Text(
@@ -788,7 +799,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   : "Sila pilih tarikh untuk melihat slot.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 18,
               ),
             ),
@@ -811,10 +822,13 @@ class _AppointmentPageState extends State<AppointmentPage> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.cyanAccent,
+            color: Colors.lightBlueAccent,
             letterSpacing: 1.5,
             shadows: [
-              Shadow(color: Colors.cyanAccent.withOpacity(0.5), blurRadius: 10),
+              Shadow(
+                color: Colors.lightBlueAccent.withValues(alpha: 0.5),
+                blurRadius: 10,
+              ),
             ],
           ),
         ),
@@ -835,15 +849,17 @@ class _AppointmentPageState extends State<AppointmentPage> {
               bool isS = selectedTime == time;
               Color borderColor = (isB || isP)
                   ? Colors.transparent
-                  : (isS ? Colors.cyanAccent : Colors.white.withOpacity(0.1));
+                  : (isS
+                        ? Colors.lightBlueAccent
+                        : Colors.white.withValues(alpha: 0.1));
               Color bgColor = (isB || isP)
                   ? Colors.white12
                   : (isS
-                        ? Colors.cyan.withOpacity(0.15)
-                        : Colors.white.withOpacity(0.05));
+                        ? Colors.lightBlue.withValues(alpha: 0.15)
+                        : Colors.white.withValues(alpha: 0.05));
               Color textColor = (isB || isP)
                   ? Colors.white38
-                  : (isS ? Colors.cyanAccent : Colors.white);
+                  : (isS ? Colors.lightBlueAccent : Colors.white);
 
               return InkWell(
                 onTap: (isB || isP)
@@ -863,7 +879,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                     boxShadow: isS
                         ? [
                             BoxShadow(
-                              color: Colors.cyanAccent.withOpacity(0.3),
+                              color: Colors.lightBlueAccent.withValues(alpha: 0.3),
                               blurRadius: 10,
                             ),
                           ]
@@ -894,13 +910,13 @@ class _AppointmentPageState extends State<AppointmentPage> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: canBook
-                  ? Colors.cyanAccent.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.05),
+                  ? Colors.lightBlueAccent.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.05),
               foregroundColor: canBook
-                  ? Colors.cyanAccent
-                  : Colors.white.withOpacity(0.3),
+                  ? Colors.lightBlueAccent
+                  : Colors.white.withValues(alpha: 0.3),
               side: BorderSide(
-                color: canBook ? Colors.cyanAccent : Colors.transparent,
+                color: canBook ? Colors.lightBlueAccent : Colors.transparent,
                 width: 2,
               ),
               shape: RoundedRectangleBorder(
@@ -917,7 +933,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                 shadows: canBook
                     ? [
                         Shadow(
-                          color: Colors.cyanAccent.withOpacity(0.8),
+                          color: Colors.lightBlueAccent.withValues(alpha: 0.8),
                           blurRadius: 10,
                         ),
                       ]

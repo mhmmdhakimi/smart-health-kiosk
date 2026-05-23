@@ -1,4 +1,4 @@
-import '../utils/no_anim_route.dart';
+﻿import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../widgets/emergency_button.dart';
@@ -17,7 +17,7 @@ class WelcomeSelectionScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+            colors: [Color(0xFF0A2249), Color(0xFF133F85)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -180,18 +180,18 @@ class _BentoLoginCardState extends State<_BentoLoginCard> {
             constraints: const BoxConstraints(minHeight: 250),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: _isPressed
                     ? widget.auraColor
-                    : Colors.white.withOpacity(0.1),
+                    : Colors.white.withValues(alpha: 0.1),
                 width: _isPressed ? 2 : 1,
               ),
               boxShadow: _isPressed
                   ? [
                       BoxShadow(
-                        color: widget.auraColor.withOpacity(0.4),
+                        color: widget.auraColor.withValues(alpha: 0.4),
                         blurRadius: 40,
                         spreadRadius: 5,
                       ),
@@ -204,7 +204,7 @@ class _BentoLoginCardState extends State<_BentoLoginCard> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: widget.auraColor.withOpacity(0.2),
+                    color: widget.auraColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(widget.icon, color: widget.auraColor, size: 70),
@@ -225,7 +225,7 @@ class _BentoLoginCardState extends State<_BentoLoginCard> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.1,
                   ),

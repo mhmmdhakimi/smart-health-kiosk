@@ -1,4 +1,4 @@
-import '../utils/no_anim_route.dart';
+﻿import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -53,16 +53,19 @@ class _KioskDashboardState extends State<KioskDashboard> {
   void initState() {
     super.initState();
     _resetIdleTimer();
-    
+
     _heartbeatSub?.cancel();
-    _heartbeatSub = FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/heartbeat').onValue.listen((event) {
-      if (mounted) {
-        setState(() {
-          _lastPingTime = DateTime.now();
-          _isHardwareOnline = true;
+    _heartbeatSub = FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/heartbeat')
+        .onValue
+        .listen((event) {
+          if (mounted) {
+            setState(() {
+              _lastPingTime = DateTime.now();
+              _isHardwareOnline = true;
+            });
+          }
         });
-      }
-    });
 
     _watchdogTimer?.cancel();
     _watchdogTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -109,21 +112,21 @@ class _KioskDashboardState extends State<KioskDashboard> {
       context: context,
       barrierDismissible: false,
       builder: (c) => AlertDialog(
-        backgroundColor: const Color(0xFF111827),
+        backgroundColor: const Color(0xFF133F85),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
-          side: const BorderSide(color: Colors.amberAccent),
+          side: const BorderSide(color: Colors.amber),
         ),
         title: Row(
           children: [
-            const Icon(Icons.timer, color: Colors.amberAccent, size: 30),
+            const Icon(Icons.timer, color: Colors.amber, size: 30),
             const SizedBox(width: 10),
             Text(
               widget.isEnglish
                   ? "Are you still there?"
                   : "Adakah anda masih di sana?",
               style: const TextStyle(
-                color: Colors.amberAccent,
+                color: Colors.amber,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -138,9 +141,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amberAccent.withOpacity(0.2),
-              foregroundColor: Colors.amberAccent,
-              side: const BorderSide(color: Colors.amberAccent),
+              backgroundColor: Colors.amber.withValues(alpha: 0.2),
+              foregroundColor: Colors.amber,
+              side: const BorderSide(color: Colors.amber),
             ),
             onPressed: () => _resetIdleTimer(),
             child: Text(
@@ -157,7 +160,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
     _idleTimer?.cancel();
     _warningTimer?.cancel();
 
-    FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/session_active').set(false);
+    FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/session_active')
+        .set(false);
 
     if (mounted) {
       // Reset all nested state layout variables explicitly
@@ -271,19 +276,23 @@ class _KioskDashboardState extends State<KioskDashboard> {
               showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
-                  backgroundColor: const Color(0xFF111827),
+                  backgroundColor: const Color(0xFF133F85),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
-                    side: const BorderSide(color: Colors.cyanAccent),
+                    side: const BorderSide(color: Colors.lightBlueAccent),
                   ),
                   title: Row(
                     children: [
-                      const Icon(Icons.lock, color: Colors.cyanAccent, size: 30),
+                      const Icon(
+                        Icons.lock,
+                        color: Colors.lightBlueAccent,
+                        size: 30,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         widget.isEnglish ? "Access Restricted" : "Akses Terhad",
                         style: const TextStyle(
-                          color: Colors.cyanAccent,
+                          color: Colors.lightBlueAccent,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -298,9 +307,11 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   actions: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyanAccent.withOpacity(0.2),
-                        foregroundColor: Colors.cyanAccent,
-                        side: const BorderSide(color: Colors.cyanAccent),
+                        backgroundColor: Colors.lightBlueAccent.withValues(
+                          alpha: 0.2,
+                        ),
+                        foregroundColor: Colors.lightBlueAccent,
+                        side: const BorderSide(color: Colors.lightBlueAccent),
                       ),
                       onPressed: () => Navigator.pop(c),
                       child: Text(
@@ -316,10 +327,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
     );
 
     if (isRestricted) {
-      return Opacity(
-        opacity: 0.45,
-        child: card,
-      );
+      return Opacity(opacity: 0.45, child: card);
     }
     return card;
   }
@@ -341,7 +349,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   color: Colors.white,
                   shadows: [
                     Shadow(
-                      color: Colors.cyanAccent.withOpacity(0.5),
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                       blurRadius: 10,
                     ),
                   ],
@@ -386,9 +394,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         title: widget.isEnglish
                             ? 'MEDICAL\nCONSULTATION'
                             : 'RUNDINGAN\nPERUBATAN',
-                        onTap: () => setState(
-                          () => _currentView = "SEE_DOCTOR_OPT",
-                        ),
+                        onTap: () =>
+                            setState(() => _currentView = "SEE_DOCTOR_OPT"),
                         isRestricted: widget.isGuest,
                       ),
                     ),
@@ -399,8 +406,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         title: widget.isEnglish
                             ? 'MEDICAL EQUIPMENT\nRESERVATION'
                             : 'TEMPAHAN PERALATAN\nPERUBATAN',
-                        onTap: () =>
-                            setState(() => _currentView = "EQUIP_RES"),
+                        onTap: () => setState(() => _currentView = "EQUIP_RES"),
                         isRestricted: widget.isGuest,
                       ),
                     ),
@@ -414,12 +420,21 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   children: [
                     Expanded(
                       child: _buildBentoCard(
-                        icon: widget.isGuest ? Icons.directions_walk_outlined : Icons.history_outlined,
+                        icon: widget.isGuest
+                            ? Icons.directions_walk_outlined
+                            : Icons.history_outlined,
                         title: widget.isGuest
-                            ? (widget.isEnglish ? 'WALK-IN' : 'WALK-IN (TIDAK\nBERJADUAL)')
-                            : (widget.isEnglish ? 'HEALTH RECORD' : 'REKOD KESIHATAN'),
-                        onTap: () =>
-                            setState(() => _currentView = widget.isGuest ? "WALK_IN_TRIAGE" : "CHECKUP_HIST"),
+                            ? (widget.isEnglish
+                                  ? 'WALK-IN'
+                                  : 'WALK-IN (TIDAK\nBERJADUAL)')
+                            : (widget.isEnglish
+                                  ? 'HEALTH RECORD'
+                                  : 'REKOD KESIHATAN'),
+                        onTap: () => setState(
+                          () => _currentView = widget.isGuest
+                              ? "WALK_IN_TRIAGE"
+                              : "CHECKUP_HIST",
+                        ),
                         isRestricted: false,
                       ),
                     ),
@@ -427,11 +442,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
                     Expanded(
                       child: _buildBentoCard(
                         icon: Icons.event_available_outlined,
-                        title: widget.isEnglish
-                            ? 'APPOINTMENT'
-                            : 'TEMU JANJI',
-                        onTap: () =>
-                            setState(() => _currentView = "APPT_HIST"),
+                        title: widget.isEnglish ? 'APPOINTMENT' : 'TEMU JANJI',
+                        onTap: () => setState(() => _currentView = "APPT_HIST"),
                         isRestricted: widget.isGuest,
                       ),
                     ),
@@ -465,10 +477,10 @@ class _KioskDashboardState extends State<KioskDashboard> {
           height: 80,
           padding: const EdgeInsets.symmetric(horizontal: 30),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.04),
+            color: Colors.white.withValues(alpha: 0.04),
             border: Border(
               bottom: BorderSide(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -482,15 +494,15 @@ class _KioskDashboardState extends State<KioskDashboard> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.cyanAccent.withOpacity(0.1),
+                        color: Colors.lightBlueAccent.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.cyanAccent.withOpacity(0.3),
+                          color: Colors.lightBlueAccent.withValues(alpha: 0.3),
                         ),
                       ),
                       child: const Icon(
                         Icons.health_and_safety,
-                        color: Colors.cyanAccent,
+                        color: Colors.lightBlueAccent,
                         size: 30,
                       ),
                     ),
@@ -504,7 +516,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         letterSpacing: 2.0,
                         shadows: [
                           Shadow(
-                            color: Colors.cyanAccent.withOpacity(0.5),
+                            color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                             blurRadius: 10,
                           ),
                         ],
@@ -517,7 +529,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
               Container(
                 height: 40,
                 width: 1,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               const SizedBox(width: 30),
               Row(
@@ -527,10 +539,17 @@ class _KioskDashboardState extends State<KioskDashboard> {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent,
+                      color: _isHardwareOnline
+                          ? Colors.lightBlueAccent
+                          : Colors.redAccent,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent, blurRadius: 10),
+                        BoxShadow(
+                          color: _isHardwareOnline
+                              ? Colors.lightBlueAccent
+                              : Colors.redAccent,
+                          blurRadius: 10,
+                        ),
                       ],
                     ),
                   ),
@@ -538,10 +557,14 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: Text(
-                      _isHardwareOnline ? "Hardware Status: Online" : "Hardware Status: Offline",
+                      _isHardwareOnline
+                          ? "Hardware Status: Online"
+                          : "Hardware Status: Offline",
                       key: ValueKey<bool>(_isHardwareOnline),
                       style: TextStyle(
-                        color: _isHardwareOnline ? Colors.cyanAccent : Colors.redAccent,
+                        color: _isHardwareOnline
+                            ? Colors.lightBlueAccent
+                            : Colors.redAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -562,7 +585,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
               Container(
                 height: 40,
                 width: 1,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               const SizedBox(width: 30),
               OutlinedButton.icon(
@@ -572,10 +595,10 @@ class _KioskDashboardState extends State<KioskDashboard> {
                     vertical: 12,
                   ),
                   side: BorderSide(
-                    color: Colors.redAccent.withOpacity(0.5),
+                    color: Colors.redAccent.withValues(alpha: 0.5),
                     width: 1,
                   ),
-                  backgroundColor: Colors.redAccent.withOpacity(0.1),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                   foregroundColor: Colors.redAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -606,7 +629,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+              colors: [Color(0xFF0A2249), Color(0xFF133F85)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -669,18 +692,18 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: _isPressed
-                      ? const Color(0xFF06B6D4)
+                      ? const Color(0xFF0EA5E9)
                       : const Color(0xFF1E293B),
                   width: _isPressed ? 2.0 : 1.0,
                 ),
                 boxShadow: _isPressed
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF06B6D4).withOpacity(0.3),
+                          color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
@@ -695,11 +718,11 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
                     widget.icon,
                     size: 80,
                     color: _isPressed
-                        ? const Color(0xFF06B6D4)
-                        : Colors.cyanAccent.withOpacity(0.8),
+                        ? const Color(0xFF0EA5E9)
+                        : Colors.lightBlueAccent.withValues(alpha: 0.8),
                     shadows: [
                       Shadow(
-                        color: const Color(0xFF06B6D4).withOpacity(0.5),
+                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.5),
                         blurRadius: _isPressed ? 20 : 10,
                       ),
                     ],
@@ -717,7 +740,9 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
                       shadows: _isPressed
                           ? [
                               Shadow(
-                                color: const Color(0xFF06B6D4).withOpacity(0.8),
+                                color: const Color(
+                                  0xFF0EA5E9,
+                                ).withValues(alpha: 0.8),
                                 blurRadius: 10,
                               ),
                             ]

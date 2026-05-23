@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
@@ -45,7 +45,9 @@ class HistoryScreen extends StatelessWidget {
               fontSize: 18,
               color: color,
               fontWeight: FontWeight.bold,
-              shadows: [Shadow(color: color.withOpacity(0.5), blurRadius: 10)],
+              shadows: [
+                Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10),
+              ],
             ),
           ),
         ],
@@ -58,12 +60,12 @@ class HistoryScreen extends StatelessWidget {
         status == "WAITING" ||
         status == "Waiting" ||
         status == "Pending") {
-      return Colors.amberAccent;
+      return Colors.amber;
     }
     if (status == "Approved" ||
         status == "COMPLETED" ||
         status == "Completed") {
-      return Colors.cyanAccent;
+      return Colors.lightBlueAccent;
     }
     if (status == "Cancelled" || status == "Overdue" || status == "Expired") {
       return Colors.redAccent;
@@ -77,9 +79,12 @@ class HistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       constraints: const BoxConstraints(minHeight: 44),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -97,9 +102,12 @@ class HistoryScreen extends StatelessWidget {
     return Container(
       height: 120,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -114,7 +122,7 @@ class HistoryScreen extends StatelessWidget {
                   size: 50,
                   color: color,
                   shadows: [
-                    Shadow(color: color.withOpacity(0.5), blurRadius: 15),
+                    Shadow(color: color.withValues(alpha: 0.5), blurRadius: 15),
                   ],
                 ),
                 const SizedBox(width: 20),
@@ -132,7 +140,7 @@ class HistoryScreen extends StatelessWidget {
                           height: 1.0,
                           shadows: [
                             Shadow(
-                              color: color.withOpacity(0.5),
+                              color: color.withValues(alpha: 0.5),
                               blurRadius: 10,
                             ),
                           ],
@@ -164,9 +172,9 @@ class HistoryScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Center(
         child: Text(
@@ -190,12 +198,15 @@ class HistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       constraints: const BoxConstraints(minHeight: 44),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.cyanAccent.withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: Colors.lightBlueAccent.withValues(alpha: 0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.cyanAccent.withOpacity(0.05),
+            color: Colors.lightBlueAccent.withValues(alpha: 0.05),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -212,14 +223,14 @@ class HistoryScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.cyanAccent.withOpacity(0.1),
+                    color: Colors.lightBlueAccent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.medical_services_rounded,
                     size: 50,
-                    color: Colors.cyanAccent,
-                    shadows: [Shadow(color: Colors.cyanAccent, blurRadius: 15)],
+                    color: Colors.lightBlueAccent,
+                    shadows: [Shadow(color: Colors.lightBlueAccent, blurRadius: 15)],
                   ),
                 ),
                 const SizedBox(width: 30),
@@ -284,14 +295,14 @@ class HistoryScreen extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.cyanAccent.withOpacity(0.2),
+                        color: Colors.lightBlueAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.cyanAccent, width: 1),
+                        border: Border.all(color: Colors.lightBlueAccent, width: 1),
                       ),
                       child: const Text(
                         "ACTIVE",
                         style: TextStyle(
-                          color: Colors.cyanAccent,
+                          color: Colors.lightBlueAccent,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
                         ),
@@ -343,9 +354,12 @@ class HistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       constraints: const BoxConstraints(minHeight: 44),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.05),
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -438,7 +452,7 @@ class HistoryScreen extends StatelessWidget {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withValues(alpha: 0.25),
                     border: const Border(
                       top: BorderSide(color: Colors.white12, width: 1),
                     ),
@@ -545,14 +559,14 @@ class HistoryScreen extends StatelessWidget {
                 upcomingCount.toString(),
                 isEnglish ? "Upcoming" : "Akan Datang",
                 Icons.calendar_today_rounded,
-                const Color(0xFF06B6D4),
+                const Color(0xFF0EA5E9),
               ),
               const SizedBox(height: 15),
               _buildBadge(
                 completedCount.toString(),
                 isEnglish ? "Completed" : "Selesai",
                 Icons.check_circle_outline_rounded,
-                Colors.greenAccent,
+                Colors.green,
               ),
               const SizedBox(height: 15),
               _buildBadge(
@@ -581,7 +595,7 @@ class HistoryScreen extends StatelessWidget {
                         ? "Upcoming Appointments"
                         : "Temu Janji Akan Datang",
                     style: const TextStyle(
-                      color: Colors.cyanAccent,
+                      color: Colors.lightBlueAccent,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -648,11 +662,11 @@ class HistoryScreen extends StatelessWidget {
                 constraints: const BoxConstraints(minHeight: 44),
                 child: TextButton.icon(
                   onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back, color: Colors.cyanAccent),
+                  icon: const Icon(Icons.arrow_back, color: Colors.lightBlueAccent),
                   label: Text(
                     isEnglish ? "Back" : "Kembali",
                     style: const TextStyle(
-                      color: Colors.cyanAccent,
+                      color: Colors.lightBlueAccent,
                       fontSize: 18,
                     ),
                   ),
@@ -669,7 +683,7 @@ class HistoryScreen extends StatelessWidget {
                   color: Colors.white,
                   shadows: [
                     Shadow(
-                      color: Colors.cyanAccent.withOpacity(0.5),
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                       blurRadius: 10,
                     ),
                   ],
@@ -690,7 +704,7 @@ class HistoryScreen extends StatelessWidget {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(
-                        color: Colors.cyanAccent,
+                        color: Colors.lightBlueAccent,
                       ),
                     );
                   }
@@ -768,11 +782,11 @@ class HistoryScreen extends StatelessWidget {
                               context,
                             ).copyWith(dividerColor: Colors.transparent),
                             child: ExpansionTile(
-                              iconColor: Colors.cyanAccent,
+                              iconColor: Colors.lightBlueAccent,
                               collapsedIconColor: Colors.white54,
                               leading: const Icon(
                                 Icons.monitor_heart_outlined,
-                                color: Colors.cyanAccent,
+                                color: Colors.lightBlueAccent,
                                 size: 30,
                               ),
                               title: Text(
@@ -796,13 +810,13 @@ class HistoryScreen extends StatelessWidget {
                               children: [
                                 _buildHistoryRow(
                                   Icons.scale,
-                                  Colors.cyanAccent,
+                                  Colors.lightBlueAccent,
                                   isEnglish ? "Weight" : "Berat",
                                   "${w.toStringAsFixed(2)} kg",
                                 ),
                                 Container(
                                   height: 1,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 _buildHistoryRow(
                                   Icons.height,
@@ -812,17 +826,17 @@ class HistoryScreen extends StatelessWidget {
                                 ),
                                 Container(
                                   height: 1,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 _buildHistoryRow(
                                   Icons.monitor_weight,
-                                  Colors.amberAccent,
+                                  Colors.amber,
                                   "BMI",
                                   bmi.toStringAsFixed(2),
                                 ),
                                 Container(
                                   height: 1,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 _buildHistoryRow(
                                   Icons.thermostat,
@@ -832,17 +846,17 @@ class HistoryScreen extends StatelessWidget {
                                 ),
                                 Container(
                                   height: 1,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 _buildHistoryRow(
                                   Icons.favorite,
-                                  Colors.pinkAccent,
+                                  Color(0xFFA855F7),
                                   isEnglish ? "Heart Rate" : "Kadar Jantung",
                                   "${data['heart_rate']} bpm",
                                 ),
                                 Container(
                                   height: 1,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 _buildHistoryRow(
                                   Icons.bloodtype,
@@ -898,7 +912,7 @@ class HistoryScreen extends StatelessWidget {
                                 fontSize: 16,
                                 shadows: [
                                   Shadow(
-                                    color: sc.withOpacity(0.8),
+                                    color: sc.withValues(alpha: 0.8),
                                     blurRadius: 10,
                                   ),
                                 ],

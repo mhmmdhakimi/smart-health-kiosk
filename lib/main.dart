@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'utils/no_anim_route.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,9 +38,45 @@ class SmartHealthKioskApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'UniMAP Smart Health Kiosk',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF133F85)),
-        scaffoldBackgroundColor: Colors.white,
+        // Primary brand color synced with UniMAP Health student dashboard
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF133F85),
+          brightness: Brightness.dark,
+          primary: const Color(0xFF133F85),
+          secondary: const Color(0xFF0EA5E9), // sky-blue accent (replaces cyanAccent)
+          tertiary: const Color(0xFFA855F7),  // purple accent (matches dashboard)
+          surface: const Color(0xFF133F85),
+          onSurface: Colors.white,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0A2249),
         useMaterial3: true,
+        // Consistent text styling across kiosk screens
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(color: Colors.white),
+          displayMedium: TextStyle(color: Colors.white),
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+        ),
+        // Elevated button style
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF133F85),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+          ),
+        ),
+        // Outlined button style
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF0EA5E9),
+            side: BorderSide(color: Color(0xFF0EA5E9)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+          ),
+        ),
       ),
       initialRoute: '/',
       onGenerateRoute: (settings) {

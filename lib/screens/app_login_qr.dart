@@ -1,4 +1,4 @@
-import '../utils/no_anim_route.dart';
+﻿import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -95,95 +95,109 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
         .ref('app_logins/$_sessionId')
         .onValue
         .listen((event) async {
-      if (_isProcessing || !event.snapshot.exists || event.snapshot.value == null) return;
+          if (_isProcessing ||
+              !event.snapshot.exists ||
+              event.snapshot.value == null)
+            return;
 
-      final raw = event.snapshot.value;
-      if (raw is! Map) return;
+          final raw = event.snapshot.value;
+          if (raw is! Map) return;
 
-      final data = Map<String, dynamic>.from(raw);
+          final data = Map<String, dynamic>.from(raw);
 
-      if (data['status'] == 'success') {
-        setState(() => _isProcessing = true);
-        _countdownTimer?.cancel();
+          if (data['status'] == 'success') {
+            setState(() => _isProcessing = true);
+            _countdownTimer?.cancel();
 
-        final studentId = data['studentId']?.toString() ?? 'STUDENT';
-        final studentName = data['studentName']?.toString() ?? 'STUDENT';
+            final studentId = data['studentId']?.toString() ?? 'STUDENT';
+            final studentName = data['studentName']?.toString() ?? 'STUDENT';
 
-        if (mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => AlertDialog(
-              backgroundColor: const Color(0xFF111827),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Colors.cyan)),
-              content: Row(
-                children: [
-                  const CircularProgressIndicator(color: Colors.cyanAccent),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Text(
-                      widget.isEnglish
-                          ? 'Signing you in...'
-                          : 'Sedang log masuk...',
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+            if (mounted) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  backgroundColor: const Color(0xFF133F85),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: Colors.lightBlue),
+                  ),
+                  content: Row(
+                    children: [
+                      const CircularProgressIndicator(color: Colors.lightBlueAccent),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Text(
+                          widget.isEnglish
+                              ? 'Signing you in...'
+                              : 'Sedang log masuk...',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            try {
+              await FirebaseDatabase.instance.ref('login_record').push().set({
+                'patient_id': studentId,
+                'patient_name': studentName.toUpperCase(),
+                'is_guest': false,
+                'login_method': 'app_qr',
+                'timestamp': ServerValue.timestamp,
+                'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
+              });
+
+              await FirebaseDatabase.instance
+                  .ref('app_logins/$_sessionId')
+                  .remove();
+
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  NoAnimRoute(
+                    page: KioskDashboard(
+                      userName: studentName.toUpperCase(),
+                      userId: studentId,
+                      isGuest: false,
+                      isEnglish: widget.isEnglish,
                     ),
                   ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        try {
-          await FirebaseDatabase.instance.ref('login_record').push().set({
-            'patient_id': studentId,
-            'patient_name': studentName.toUpperCase(),
-            'is_guest': false,
-            'login_method': 'app_qr',
-            'timestamp': ServerValue.timestamp,
-            'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-            'time': DateFormat('hh:mm:ss a').format(DateTime.now()),
-          });
-
-          await FirebaseDatabase.instance.ref('app_logins/$_sessionId').remove();
-
-          if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              NoAnimRoute(page: KioskDashboard(
-                  userName: studentName.toUpperCase(),
-                  userId: studentId,
-                  isGuest: false,
-                  isEnglish: widget.isEnglish,
-                ),
-              ),
-              (_) => false,
-            );
+                  (_) => false,
+                );
+              }
+            } catch (e) {
+              if (mounted) Navigator.pop(context);
+              setState(() => _isProcessing = false);
+              debugPrint('AppLoginQrPage: login error: $e');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.redAccent,
+                    content: Text(
+                      widget.isEnglish
+                          ? 'Login error. Please try again.'
+                          : 'Ralat log masuk. Cuba lagi.',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                );
+              }
+            }
           }
-        } catch (e) {
-          if (mounted) Navigator.pop(context);
-          setState(() => _isProcessing = false);
-          debugPrint('AppLoginQrPage: login error: $e');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: Colors.redAccent,
-              content: Text(
-                widget.isEnglish ? 'Login error. Please try again.' : 'Ralat log masuk. Cuba lagi.',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ));
-          }
-        }
-      }
-    });
+        });
   }
 
   // ── UI helpers ───────────────────────────────────────────────────────────
   Color get _timerColor {
-    if (_timeLeft > 60) return Colors.cyanAccent;
-    if (_timeLeft > 30) return Colors.amberAccent;
+    if (_timeLeft > 60) return Colors.lightBlueAccent;
+    if (_timeLeft > 30) return Colors.amber;
     return Colors.redAccent;
   }
 
@@ -197,17 +211,20 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+            colors: [Color(0xFF0A2249), Color(0xFF133F85)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-          )
+          ),
         ),
         child: Stack(
           children: [
             // ── Main content ─────────────────────────────────────────────────
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -227,7 +244,9 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                                 value: _timeLeft / _timeoutSeconds,
                                 strokeWidth: 6,
                                 color: _timerColor,
-                                backgroundColor: Colors.white.withOpacity(0.1),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.1,
+                                ),
                               ),
                             ),
                             Text(
@@ -236,7 +255,12 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: _timerColor,
-                                shadows: [Shadow(color: _timerColor.withOpacity(0.8), blurRadius: 8)],
+                                shadows: [
+                                  Shadow(
+                                    color: _timerColor.withValues(alpha: 0.8),
+                                    blurRadius: 8,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -254,12 +278,19 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.04),
+                                  color: Colors.white.withValues(alpha: 0.04),
                                   borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(color: Colors.cyanAccent.withOpacity(0.5), width: 2),
+                                  border: Border.all(
+                                    color: Colors.lightBlueAccent.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    width: 2,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.cyanAccent.withOpacity(0.2),
+                                      color: Colors.lightBlueAccent.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 30,
                                       spreadRadius: 5,
                                     ),
@@ -281,26 +312,6 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                                         backgroundColor: Colors.white,
                                       ),
                                     ),
-                                    const SizedBox(height: 15),
-                                    // Session ID label
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.white.withOpacity(0.2)),
-                                      ),
-                                      child: Text(
-                                        _sessionId,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          letterSpacing: 1.5,
-                                          color: Colors.white70,
-                                          fontFamily: 'monospace',
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -319,8 +330,11 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.smartphone_rounded,
-                                  color: Colors.cyanAccent, size: 36),
+                              const Icon(
+                                Icons.smartphone_rounded,
+                                color: Colors.lightBlueAccent,
+                                size: 36,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -331,7 +345,14 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
-                                    shadows: [Shadow(color: Colors.cyanAccent.withOpacity(0.5), blurRadius: 10)],
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.lightBlueAccent.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 10,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -344,7 +365,10 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                             widget.isEnglish
                                 ? 'Open the UniMAP Health app and scan the QR code to log in.'
                                 : 'Buka aplikasi UniMAP Health dan imbas kod QR ini untuk log masuk.',
-                            style: const TextStyle(fontSize: 16, color: Colors.white70),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
                           ),
 
                           const SizedBox(height: 30),
@@ -377,13 +401,23 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                           Center(
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.cyanAccent,
-                                side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5), width: 1.5),
+                                foregroundColor: Colors.lightBlueAccent,
+                                side: BorderSide(
+                                  color: Colors.lightBlueAccent.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  width: 1.5,
+                                ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 40, vertical: 16),
+                                  horizontal: 40,
+                                  vertical: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30)),
-                                backgroundColor: Colors.cyanAccent.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                backgroundColor: Colors.lightBlueAccent.withValues(
+                                  alpha: 0.1,
+                                ),
                               ),
                               onPressed: () {
                                 Navigator.pop(context);
@@ -392,7 +426,10 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                               label: Text(
                                 widget.isEnglish ? 'CANCEL' : 'BATAL',
                                 style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ),
                           ),
@@ -423,10 +460,7 @@ class _InstructionRow extends StatelessWidget {
   final String step;
   final String text;
 
-  const _InstructionRow({
-    required this.step,
-    required this.text,
-  });
+  const _InstructionRow({required this.step, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -438,15 +472,15 @@ class _InstructionRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: Colors.cyanAccent.withOpacity(0.2), 
+            color: Colors.lightBlueAccent.withValues(alpha: 0.2),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.cyanAccent.withOpacity(0.5)),
+            border: Border.all(color: Colors.lightBlueAccent.withValues(alpha: 0.5)),
           ),
           alignment: Alignment.center,
           child: Text(
             step,
             style: const TextStyle(
-              color: Colors.cyanAccent,
+              color: Colors.lightBlueAccent,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -456,7 +490,11 @@ class _InstructionRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 16, color: Colors.white, height: 1.4),
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              height: 1.4,
+            ),
           ),
         ),
       ],

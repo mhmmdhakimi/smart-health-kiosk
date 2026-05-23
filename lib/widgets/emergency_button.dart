@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class EmergencyHelpButton extends StatelessWidget {
@@ -38,10 +38,13 @@ class EmergencyHelpButton extends StatelessWidget {
         showDialog(
           context: context,
           builder: (c) => AlertDialog(
-            backgroundColor: const Color(0xFF111827),
+            backgroundColor: const Color(0xFF133F85),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.red.withOpacity(0.5), width: 1),
+              side: BorderSide(
+                color: Colors.red.withValues(alpha: 0.5),
+                width: 1,
+              ),
             ),
             title: Row(
               children: [
@@ -80,8 +83,11 @@ class EmergencyHelpButton extends StatelessWidget {
       return OutlinedButton.icon(
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          side: BorderSide(color: Colors.redAccent.withOpacity(0.5), width: 1),
-          backgroundColor: Colors.redAccent.withOpacity(0.1),
+          side: BorderSide(
+            color: Colors.redAccent.withValues(alpha: 0.5),
+            width: 1,
+          ),
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
           foregroundColor: Colors.redAccent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -105,12 +111,15 @@ class EmergencyHelpButton extends StatelessWidget {
         width: customText != null ? 380 : 280,
         height: 60,
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.15),
+          color: Colors.red.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.red.withOpacity(0.5), width: 1),
+          border: Border.all(
+            color: Colors.red.withValues(alpha: 0.5),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               blurRadius: 10,
               spreadRadius: 2,
             ),

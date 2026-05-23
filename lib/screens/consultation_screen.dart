@@ -1,4 +1,4 @@
-import '../utils/no_anim_route.dart';
+﻿import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'appointment_page.dart';
@@ -31,11 +31,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
   void _navigateToAppointment() async {
     String? result = await Navigator.push(
       context,
-      NoAnimRoute(page: Scaffold(
+      NoAnimRoute(
+        page: Scaffold(
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF0B0F19), Color(0xFF111827)],
+                colors: [Color(0xFF0A2249), Color(0xFF133F85)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -70,11 +71,11 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
             icon: const Icon(
               Icons.arrow_back,
               size: 28,
-              color: Colors.cyanAccent,
+              color: Colors.lightBlueAccent,
             ),
             label: Text(
               widget.isEnglish ? "Back" : "Kembali",
-              style: const TextStyle(fontSize: 18, color: Colors.cyanAccent),
+              style: const TextStyle(fontSize: 18, color: Colors.lightBlueAccent),
             ),
           ),
         ),
@@ -93,7 +94,7 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                   letterSpacing: 1.5,
                   shadows: [
                     Shadow(
-                      color: Colors.cyanAccent.withOpacity(0.5),
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.5),
                       blurRadius: 15,
                     ),
                   ],
@@ -184,19 +185,21 @@ class _GlassBentoCardState extends State<_GlassBentoCard> {
               child: Container(
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Colors.cyan.withOpacity(0.08)
-                      : Colors.white.withOpacity(0.04),
+                      ? Colors.lightBlue.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: isActive
-                        ? const Color(0xFF06B6D4)
-                        : Colors.white.withOpacity(0.1),
+                        ? const Color(0xFF0EA5E9)
+                        : Colors.white.withValues(alpha: 0.1),
                     width: 1,
                   ),
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF06B6D4).withOpacity(0.4),
+                            color: const Color(
+                              0xFF0EA5E9,
+                            ).withValues(alpha: 0.4),
                             blurRadius: 40,
                             spreadRadius: 5,
                           ),
@@ -212,7 +215,7 @@ class _GlassBentoCardState extends State<_GlassBentoCard> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? Colors.cyanAccent.withOpacity(0.15)
+                            ? Colors.lightBlueAccent.withValues(alpha: 0.15)
                             : Colors.transparent,
                         shape: BoxShape.circle,
                       ),
@@ -220,14 +223,14 @@ class _GlassBentoCardState extends State<_GlassBentoCard> {
                         widget.icon,
                         size: 90,
                         color: isActive
-                            ? const Color(0xFF06B6D4)
+                            ? const Color(0xFF0EA5E9)
                             : Colors.white70,
                         shadows: isActive
                             ? [
                                 Shadow(
                                   color: const Color(
-                                    0xFF06B6D4,
-                                  ).withOpacity(0.8),
+                                    0xFF0EA5E9,
+                                  ).withValues(alpha: 0.8),
                                   blurRadius: 25,
                                 ),
                               ]
@@ -248,8 +251,8 @@ class _GlassBentoCardState extends State<_GlassBentoCard> {
                             ? [
                                 Shadow(
                                   color: const Color(
-                                    0xFF06B6D4,
-                                  ).withOpacity(0.8),
+                                    0xFF0EA5E9,
+                                  ).withValues(alpha: 0.8),
                                   blurRadius: 15,
                                 ),
                               ]

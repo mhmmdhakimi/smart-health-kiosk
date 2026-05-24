@@ -2,7 +2,6 @@
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
-import '../widgets/emergency_button.dart';
 
 class HistoryScreen extends StatelessWidget {
   final String userId;

@@ -385,8 +385,9 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 Future.delayed(
                                   const Duration(milliseconds: 250),
                                   () {
-                                    if (mounted)
+                                    if (mounted) {
                                       Navigator.pop(context, selectedDay);
+                                    }
                                   },
                                 );
                               },

@@ -97,8 +97,9 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
         .listen((event) async {
           if (_isProcessing ||
               !event.snapshot.exists ||
-              event.snapshot.value == null)
+              event.snapshot.value == null) {
             return;
+          }
 
           final raw = event.snapshot.value;
           if (raw is! Map) return;

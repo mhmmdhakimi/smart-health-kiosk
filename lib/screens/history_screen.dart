@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
+import '../widgets/shimmer_loading.dart';
 
 class HistoryScreen extends StatelessWidget {
   final String userId;
@@ -187,7 +188,6 @@ class HistoryScreen extends StatelessWidget {
   Widget _buildActiveCard(Map<String, dynamic> appointment) {
     String dept = appointment['department'] ?? 'Clinic';
     String doctor = appointment['doctor'] ?? 'Unassigned';
-    String room = appointment['room'] ?? 'TBD';
     String reason = appointment['reason'] ?? 'General Checkup';
     DateTime dt = appointment['parsedDateTime'] as DateTime;
     String dateStr = DateFormat('dd MMM yyyy').format(dt);
@@ -337,7 +337,6 @@ class HistoryScreen extends StatelessWidget {
   Widget _buildPastCard(Map<String, dynamic> appointment) {
     String dept = appointment['department'] ?? 'Clinic';
     String doctor = appointment['doctor'] ?? 'Unassigned';
-    String room = appointment['room'] ?? 'TBD';
     String notes = appointment['notes'] ?? '';
     String status = (appointment['status'] ?? '').toString().toLowerCase();
 
@@ -584,8 +583,8 @@ class HistoryScreen extends StatelessWidget {
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.only(
-                bottom: 100,
-              ), // Give room for emergency button
+                bottom: 20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -701,9 +700,22 @@ class HistoryScreen extends StatelessWidget {
                           .onValue,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.lightBlueAccent,
+                    return ListView.builder(
+                      itemCount: 4,
+                      padding: const EdgeInsets.only(bottom: 100),
+                      itemBuilder: (_, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: ShimmerLoading(
+                          baseColor: const Color(0xFF1E3A6E),
+                          highlightColor: const Color(0xFF2A5098),
+                          child: Container(
+                            height: 90,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E3A6E),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   }

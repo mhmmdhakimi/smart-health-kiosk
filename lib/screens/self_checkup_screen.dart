@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'appointment_page.dart';
+import '../utils/network_monitor.dart';
 
 class SelfCheckupScreen extends StatefulWidget {
   final String userId;
@@ -45,6 +46,19 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
   }
 
   void _startSelfCheckup() async {
+    if (!NetworkMonitor().isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.isEnglish
+                ? "Please check your internet connection."
+                : "Sila periksa sambungan internet anda.",
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     setState(() {
       _isCheckupActive = true;
       _latestCheckupData = null;
@@ -212,10 +226,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   },
                   child: Text(
                     widget.isEnglish ? "OK" : "OK",
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontSize: 18,
-                    ),
+                    style: const TextStyle(color: Colors.green, fontSize: 18),
                   ),
                 ),
               ),
@@ -420,7 +431,9 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
     bool isActive = activeStep == stepIndex;
     Color color = isCompleted
         ? Colors.green
-        : (isActive ? Colors.lightBlueAccent : Colors.white.withValues(alpha: 0.2));
+        : (isActive
+              ? Colors.lightBlueAccent
+              : Colors.white.withValues(alpha: 0.2));
     return Column(
       children: [
         Container(
@@ -465,9 +478,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
       height: 4,
       margin: const EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
-        color: isCompleted
-            ? Colors.green
-            : Colors.white.withValues(alpha: 0.2),
+        color: isCompleted ? Colors.green : Colors.white.withValues(alpha: 0.2),
         boxShadow: isCompleted
             ? [
                 BoxShadow(
@@ -639,11 +650,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                               100,
                               80,
                               100,
-                              [
-                                Colors.redAccent,
-                                Colors.green,
-                                Colors.green,
-                              ],
+                              [Colors.redAccent, Colors.green, Colors.green],
                             ),
                           ],
                         ),
@@ -690,11 +697,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
             const SizedBox(height: 25),
 
             if (!isUnhealthy) ...[
-              const Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 50,
-              ),
+              const Icon(Icons.check_circle, color: Colors.green, size: 50),
               const SizedBox(height: 10),
               Text(
                 widget.isEnglish
@@ -716,10 +719,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(
-                        color: Colors.green,
-                        width: 1,
-                      ),
+                      side: const BorderSide(color: Colors.green, width: 1),
                     ),
                     elevation: 0,
                   ),
@@ -1120,12 +1120,16 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                                   shape: BoxShape.circle,
                                   color: Colors.white.withValues(alpha: 0.04),
                                   border: Border.all(
-                                    color: Colors.lightBlue.withValues(alpha: 0.3),
+                                    color: Colors.lightBlue.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.lightBlue.withValues(alpha: 0.2),
+                                      color: Colors.lightBlue.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 40,
                                       spreadRadius: 10,
                                     ),

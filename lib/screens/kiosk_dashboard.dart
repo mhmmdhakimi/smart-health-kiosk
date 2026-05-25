@@ -1,9 +1,8 @@
-﻿import '../utils/no_anim_route.dart';
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
-import '../widgets/emergency_button.dart';
 import 'language_selection.dart';
 
 // Import our new modular screens
@@ -13,6 +12,8 @@ import 'consultation_screen.dart';
 import 'equipment_screen.dart';
 import 'history_screen.dart';
 import 'appointment_page.dart';
+import '../utils/network_monitor.dart';
+import '../utils/hardware_monitor.dart';
 
 class KioskDashboard extends StatefulWidget {
   final String userName;
@@ -44,49 +45,26 @@ class _KioskDashboardState extends State<KioskDashboard> {
   Timer? _warningTimer;
   bool _isWarningDialogVisible = false;
 
-  StreamSubscription? _heartbeatSub;
-  Timer? _watchdogTimer;
-  DateTime _lastPingTime = DateTime.now();
+  // Global hardware monitor subscription
+  StreamSubscription? _hardwareSub;
   bool _isHardwareOnline = false;
+
+  // Network monitoring
+  bool _isNetworkOnline = true;
 
   @override
   void initState() {
     super.initState();
     _resetIdleTimer();
-
-    _heartbeatSub?.cancel();
-    _heartbeatSub = FirebaseDatabase.instance
-        .ref('kiosk/${widget.kioskId}/heartbeat')
-        .onValue
-        .listen((event) {
-          if (mounted) {
-            setState(() {
-              _lastPingTime = DateTime.now();
-              _isHardwareOnline = true;
-            });
-          }
-        });
-
-    _watchdogTimer?.cancel();
-    _watchdogTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        if (DateTime.now().difference(_lastPingTime).inSeconds > 5) {
-          if (_isHardwareOnline) {
-            setState(() {
-              _isHardwareOnline = false;
-            });
-          }
-        }
-      }
-    });
+    _initNetworkMonitoring();
+    _initHardwareMonitoring();
   }
 
   @override
   void dispose() {
     _idleTimer?.cancel();
     _warningTimer?.cancel();
-    _heartbeatSub?.cancel();
-    _watchdogTimer?.cancel();
+    _hardwareSub?.cancel();
     super.dispose();
   }
 
@@ -102,6 +80,25 @@ class _KioskDashboardState extends State<KioskDashboard> {
     }
 
     _idleTimer = Timer(const Duration(seconds: 45), _showIdleWarningDialog);
+  }
+
+  void _initNetworkMonitoring() {
+    _isNetworkOnline = NetworkMonitor().isOnline;
+    NetworkMonitor().onlineStream.listen((isOnline) {
+      if (mounted) {
+        setState(() => _isNetworkOnline = isOnline);
+      }
+    });
+  }
+
+  void _initHardwareMonitoring() {
+    // Seed synchronously so the UI is correct before the first stream event.
+    _isHardwareOnline = HardwareMonitor().isOnline;
+    _hardwareSub = HardwareMonitor().onlineStream.listen((isOnline) {
+      if (mounted) {
+        setState(() => _isHardwareOnline = isOnline);
+      }
+    });
   }
 
   void _showIdleWarningDialog() {
@@ -262,83 +259,125 @@ class _KioskDashboardState extends State<KioskDashboard> {
     }
   }
 
+  // ── Disabled reason enum ──────────────────────────────────────────────────
+  void _showDisabledDialog({required String title, required String message, required IconData icon, required Color color}) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: const Color(0xFF0D1B3E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: color.withValues(alpha: 0.6), width: 1.5),
+        ),
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: 30),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.5),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color.withValues(alpha: 0.15),
+              foregroundColor: color,
+              side: BorderSide(color: color.withValues(alpha: 0.5)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(c),
+            child: Text(
+              widget.isEnglish ? "OK, UNDERSTOOD" : "OK, FAHAM",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBentoCard({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
     bool isRestricted = false,
+    // isHardwareDependent = only grayed when hardware is offline
+    // isNetworkDependent  = grayed when network is offline (default for all)
+    bool isHardwareDependent = false,
   }) {
-    Widget card = GlassBentoCard(
-      icon: icon,
-      title: title,
-      onTap: isRestricted
-          ? () {
-              showDialog(
-                context: context,
-                builder: (c) => AlertDialog(
-                  backgroundColor: const Color(0xFF133F85),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    side: const BorderSide(color: Colors.lightBlueAccent),
-                  ),
-                  title: Row(
-                    children: [
-                      const Icon(
-                        Icons.lock,
-                        color: Colors.lightBlueAccent,
-                        size: 30,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        widget.isEnglish ? "Access Restricted" : "Akses Terhad",
-                        style: const TextStyle(
-                          color: Colors.lightBlueAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  content: Text(
-                    widget.isEnglish
-                        ? "This feature requires an official UniMAP Student Account. Please scan your student ID badge at the login portal to continue."
-                        : "Ciri ini memerlukan Akaun Pelajar UniMAP rasmi. Sila imbas kad ID pelajar anda di portal log masuk untuk meneruskan.",
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                  actions: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlueAccent.withValues(
-                          alpha: 0.2,
-                        ),
-                        foregroundColor: Colors.lightBlueAccent,
-                        side: const BorderSide(color: Colors.lightBlueAccent),
-                      ),
-                      onPressed: () => Navigator.pop(c),
-                      child: Text(
-                        widget.isEnglish ? "OK, UNDERSTOOD" : "OK, FAHAM",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-          : onTap,
-    );
-
-    if (isRestricted) {
-      return Opacity(opacity: 0.45, child: card);
+    // Network offline → everything is disabled
+    if (!_isNetworkOnline) {
+      return Opacity(
+        opacity: 0.35,
+        child: GlassBentoCard(icon: icon, title: title, onTap: () {}),
+      );
     }
-    return card;
+
+    // Hardware offline → only hardware-dependent features are disabled
+    if (isHardwareDependent && !_isHardwareOnline) {
+      return Opacity(
+        opacity: 0.45,
+        child: GlassBentoCard(
+          icon: icon,
+          title: title,
+          onTap: () => _showDisabledDialog(
+            icon: Icons.sensors_off_rounded,
+            color: Colors.orangeAccent,
+            title: widget.isEnglish ? 'Hardware Offline' : 'Perkakasan Tidak Aktif',
+            message: widget.isEnglish
+                ? 'The health scanning hardware is currently offline or not responding.\n\nPlease wait for the hardware to reconnect, or contact clinic staff for assistance.'
+                : 'Perkakasan imbasan kesihatan sedang tidak aktif atau tidak bertindak balas.\n\nSila tunggu sehingga perkakasan disambung semula, atau hubungi kakitangan klinik untuk bantuan.',
+          ),
+        ),
+      );
+    }
+
+    // Access restricted (guest trying to use student-only feature)
+    if (isRestricted) {
+      return Opacity(
+        opacity: 0.45,
+        child: GlassBentoCard(
+          icon: icon,
+          title: title,
+          onTap: () => _showDisabledDialog(
+            icon: Icons.lock_outline_rounded,
+            color: Colors.lightBlueAccent,
+            title: widget.isEnglish ? 'Access Restricted' : 'Akses Terhad',
+            message: widget.isEnglish
+                ? 'This feature requires an official UniMAP Student Account.\n\nPlease scan your Student ID card at the login portal to continue.'
+                : 'Ciri ini memerlukan Akaun Pelajar UniMAP rasmi.\n\nSila imbas kad ID pelajar anda di portal log masuk untuk meneruskan.',
+          ),
+        ),
+      );
+    }
+
+    return GlassBentoCard(icon: icon, title: title, onTap: onTap);
   }
 
   Widget _buildHome() {
+    // ── Software (network) offline → full-screen unavailable message ──────────
+    if (!_isNetworkOnline) {
+      return _buildSystemOfflineScreen();
+    }
+
     return Column(
       children: [
+        // ── Header ─────────────────────────────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.only(bottom: 30.0),
+          padding: const EdgeInsets.only(bottom: 24.0),
           child: Column(
             children: [
+              // Hardware offline notice strip
+              if (!_isHardwareOnline) _buildHardwareOfflineBanner(),
+              if (!_isHardwareOnline) const SizedBox(height: 10),
               Text(
                 widget.isEnglish
                     ? 'WELCOME, ${widget.userName.toUpperCase()}!'
@@ -355,7 +394,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 widget.isEnglish
                     ? 'PLEASE CHOOSE AN OPTION BELOW TO BEGIN.'
@@ -369,6 +408,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
             ],
           ),
         ),
+        // ── Bento Grid ─────────────────────────────────────────────────────────
         Expanded(
           child: Column(
             children: [
@@ -384,7 +424,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
                             : 'PEMERIKSAAN\nKENDIRI',
                         onTap: () =>
                             setState(() => _currentView = "SELF_CHECKUP"),
-                        isRestricted: false,
+                        // Self-checkup needs hardware to be functional
+                        isHardwareDependent: true,
                       ),
                     ),
                     const SizedBox(width: 25),
@@ -435,7 +476,6 @@ class _KioskDashboardState extends State<KioskDashboard> {
                               ? "WALK_IN_TRIAGE"
                               : "CHECKUP_HIST",
                         ),
-                        isRestricted: false,
                       ),
                     ),
                     const SizedBox(width: 25),
@@ -468,6 +508,129 @@ class _KioskDashboardState extends State<KioskDashboard> {
       ],
     );
   }
+
+  // ── Full-screen software offline screen ──────────────────────────────────
+  Widget _buildSystemOfflineScreen() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Animated icon container
+          Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.red.withValues(alpha: 0.08),
+              border: Border.all(
+                color: Colors.redAccent.withValues(alpha: 0.4),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.redAccent.withValues(alpha: 0.15),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.cloud_off_rounded,
+              size: 64,
+              color: Colors.redAccent,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            widget.isEnglish
+                ? 'System Temporarily Unavailable'
+                : 'Sistem Tidak Tersedia Buat Masa Ini',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 520,
+            child: Text(
+              widget.isEnglish
+                  ? 'We apologise for the inconvenience. The kiosk system is currently offline and all services are unavailable at this time.\n\nPlease visit us again shortly, or speak to our clinic staff for immediate assistance.'
+                  : 'Kami memohon maaf atas kesulitan ini. Sistem kiosk sedang tidak dapat disambungkan dan semua perkhidmatan tidak tersedia buat masa ini.\n\nSila kunjungi semula sebentar lagi, atau berjumpa dengan kakitangan klinik kami untuk bantuan segera.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white54,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
+          // Pulsing reconnecting indicator
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.redAccent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                widget.isEnglish ? 'Attempting to reconnect...' : 'Cuba menyambung semula...',
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Hardware offline notice banner ───────────────────────────────────────
+  Widget _buildHardwareOfflineBanner() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orangeAccent.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.sensors_off_rounded, color: Colors.orangeAccent, size: 20),
+          const SizedBox(width: 10),
+          Text(
+            widget.isEnglish
+                ? 'Health scanner offline — Self-Checkup is unavailable.'
+                : 'Pengimbas kesihatan tidak aktif — Pemeriksaan Kendiri tidak tersedia.',
+            style: const TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildTopBar() {
     return ClipRRect(
@@ -516,7 +679,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         letterSpacing: 2.0,
                         shadows: [
                           Shadow(
-                            color: Colors.lightBlueAccent.withValues(alpha: 0.5),
+                            color: Colors.lightBlueAccent.withValues(
+                              alpha: 0.5,
+                            ),
                             blurRadius: 10,
                           ),
                         ],
@@ -572,16 +737,6 @@ class _KioskDashboardState extends State<KioskDashboard> {
                 ],
               ),
               const Spacer(),
-              const SizedBox(width: 30),
-              EmergencyHelpButton(
-                isEnglish: widget.isEnglish,
-                patientName: widget.userName.toUpperCase(),
-                patientId: widget.userId,
-                location: 'Kiosk Top Bar',
-                customText: widget.isEnglish ? "EMERGENCY" : "KECEMASAN",
-                isCompact: true,
-              ),
-              const SizedBox(width: 30),
               Container(
                 height: 40,
                 width: 1,
@@ -620,8 +775,6 @@ class _KioskDashboardState extends State<KioskDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-
     return Listener(
       onPointerDown: (_) => _resetIdleTimer(),
       onPointerMove: (_) => _resetIdleTimer(),
@@ -658,12 +811,16 @@ class GlassBentoCard extends StatefulWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final bool isNetworkDependent;
+  final bool isHardwareOnline;
 
   const GlassBentoCard({
     super.key,
     required this.icon,
     required this.title,
     required this.onTap,
+    this.isNetworkDependent = true,
+    this.isHardwareOnline = true,
   });
 
   @override
@@ -675,6 +832,7 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
 
   @override
   Widget build(BuildContext context) {
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -685,7 +843,7 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeInOut,
-        transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
+        transform: Matrix4.diagonal3Values(_isPressed ? 0.98 : 1.0, _isPressed ? 0.98 : 1.0, 1.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(

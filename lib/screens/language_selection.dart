@@ -1,11 +1,121 @@
-﻿import '../utils/no_anim_route.dart';
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:ui';
-import '../widgets/emergency_button.dart';
 import 'welcome_selection.dart';
+import '../utils/network_monitor.dart';
 
-class LanguageSelectionPage extends StatelessWidget {
+class LanguageSelectionPage extends StatefulWidget {
   const LanguageSelectionPage({super.key});
+
+  @override
+  State<LanguageSelectionPage> createState() => _LanguageSelectionPageState();
+}
+
+class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
+  bool _isNetworkOnline = true;
+  StreamSubscription<bool>? _networkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed synchronously so the first frame is already correct.
+    _isNetworkOnline = NetworkMonitor().isOnline;
+    _networkSub = NetworkMonitor().onlineStream.listen((isOnline) {
+      if (mounted) setState(() => _isNetworkOnline = isOnline);
+    });
+  }
+
+  @override
+  void dispose() {
+    _networkSub?.cancel();
+    super.dispose();
+  }
+
+  // ── Full-screen bilingual system offline screen ───────────────────────────
+  Widget _buildSystemOfflineScreen() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.red.withValues(alpha: 0.08),
+              border: Border.all(
+                color: Colors.redAccent.withValues(alpha: 0.4),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.redAccent.withValues(alpha: 0.15),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.cloud_off_rounded,
+              size: 64,
+              color: Colors.redAccent,
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'System Temporarily Unavailable\nSistem Tidak Tersedia Buat Masa Ini',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 0.5,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const SizedBox(
+            width: 560,
+            child: Text(
+              'We apologise for the inconvenience. The kiosk system is currently offline and all services are unavailable at this time. Please visit us again shortly, or speak to our clinic staff for immediate assistance.\n\n'
+              'Kami memohon maaf atas kesulitan ini. Sistem kiosk sedang tidak dapat disambungkan dan semua perkhidmatan tidak tersedia buat masa ini. Sila kunjungi semula sebentar lagi, atau berjumpa dengan kakitangan klinik kami untuk bantuan segera.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.white54,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.redAccent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Attempting to reconnect... / Cuba menyambung semula...',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +130,7 @@ class LanguageSelectionPage extends StatelessWidget {
         ),
         child: Stack(
           children: [
+            // ── Normal language selection UI (unchanged) ────────────────────
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -75,13 +186,12 @@ class LanguageSelectionPage extends StatelessWidget {
                 ],
               ),
             ),
-            const Align(
-              alignment: Alignment.bottomCenter,
-              child: EmergencyHelpButton(
-                isEnglish: true,
-                customText: "EMERGENCY / KECEMASAN",
+            // ── Software offline overlay — sits on top when network is down ─
+            if (!_isNetworkOnline)
+              Container(
+                color: const Color(0xFF0A2249).withValues(alpha: 0.97),
+                child: _buildSystemOfflineScreen(),
               ),
-            ),
           ],
         ),
       ),

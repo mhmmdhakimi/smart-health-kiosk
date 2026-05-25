@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -48,7 +48,6 @@ class _AppointmentPageState extends State<AppointmentPage> {
   }
 
   Future<void> _checkExistingBookings() async {
-    DateTime now = DateTime.now();
     var q = await FirebaseDatabase.instance.ref('appointments').once();
     bool active = false;
     if (q.snapshot.exists) {

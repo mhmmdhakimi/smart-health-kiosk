@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'utils/no_anim_route.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'core/firebase_option.dart';
 import 'screens/language_selection.dart';
 import 'screens/mobile_checkin.dart';
+import 'utils/network_monitor.dart';
+import 'utils/hardware_monitor.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,11 @@ void main() async {
   }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Start global monitors AFTER Firebase is ready so Firebase streams work.
+  NetworkMonitor().startMonitoring();
+  HardwareMonitor().startMonitoring();
+
   runApp(const SmartHealthKioskApp());
 }
 

@@ -1,11 +1,10 @@
-﻿import '../utils/no_anim_route.dart';
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../widgets/emergency_button.dart';
 import 'language_selection.dart';
 import 'kiosk_dashboard.dart';
 
@@ -125,7 +124,14 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
                   ),
                   content: Row(
                     children: [
-                      const CircularProgressIndicator(color: Colors.lightBlueAccent),
+                      const SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: CircularProgressIndicator(
+                          color: Colors.lightBlueAccent,
+                          strokeWidth: 3,
+                        ),
+                      ),
                       const SizedBox(width: 20),
                       Expanded(
                         child: Text(
@@ -442,11 +448,6 @@ class _AppLoginQrPageState extends State<AppLoginQrPage>
               ),
             ),
 
-            // ── Emergency button ─────────────────────────────────────────────
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: EmergencyHelpButton(isEnglish: widget.isEnglish),
-            ),
           ],
         ),
       ),

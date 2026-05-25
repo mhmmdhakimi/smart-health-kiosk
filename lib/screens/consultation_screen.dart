@@ -1,4 +1,4 @@
-﻿import '../utils/no_anim_route.dart';
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'appointment_page.dart';
@@ -177,7 +177,7 @@ class _GlassBentoCardState extends State<_GlassBentoCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutQuart,
-          transform: Matrix4.identity()..scale(_isPressed ? 0.96 : 1.0),
+          transform: Matrix4.diagonal3Values(_isPressed ? 0.96 : 1.0, _isPressed ? 0.96 : 1.0, 1.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(30),
             child: BackdropFilter(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
@@ -55,7 +55,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
       context: context,
       barrierDismissible: false,
       builder: (c) => const Center(
-        child: CircularProgressIndicator(color: Colors.lightBlueAccent),
+        child: _LoadingSpinner(),
       ),
     );
     final activeTicketQuery = await FirebaseDatabase.instance
@@ -150,7 +150,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
       context: context,
       barrierDismissible: false,
       builder: (c) => const Center(
-        child: CircularProgressIndicator(color: Colors.lightBlueAccent),
+        child: _LoadingSpinner(),
       ),
     );
     int queueNumber = 1000;
@@ -734,7 +734,7 @@ class _WalkInTriageCardState extends State<_WalkInTriageCard> {
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.96 : 1.0),
+        transform: Matrix4.diagonal3Values(_isPressed ? 0.96 : 1.0, _isPressed ? 0.96 : 1.0, 1.0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
@@ -806,6 +806,57 @@ class _WalkInTriageCardState extends State<_WalkInTriageCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Premium Loading Spinner to replace CircularProgressIndicator
+// ────────────────────────────────────────────────────────────────────────────
+class _LoadingSpinner extends StatelessWidget {
+  const _LoadingSpinner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: const Color(0xFF133F85).withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.lightBlueAccent.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.lightBlueAccent.withValues(alpha: 0.2),
+            blurRadius: 30,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              color: Colors.lightBlueAccent,
+              strokeWidth: 3,
+            ),
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Processing...',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

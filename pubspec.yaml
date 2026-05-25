@@ -44,6 +44,7 @@ dependencies:
   qr_flutter: ^4.1.0
   intl: ^0.20.2
   table_calendar: ^3.1.2
+  connectivity_plus: ^7.1.1
 
 dev_dependencies:
   flutterfire_cli: any

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
@@ -37,11 +37,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   String? _eMonth;
   String? _eYear;
 
-  final List<String> _daysList = List.generate(31, (i) => (i + 1).toString());
-  final List<String> _yearsList = [
-    DateTime.now().year.toString(),
-    (DateTime.now().year + 1).toString(),
-  ];
+
   List<String> get _monthsList => widget.isEnglish
       ? [
           'January',
@@ -385,7 +381,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 Future.delayed(
                                   const Duration(milliseconds: 250),
                                   () {
-                                    if (mounted) {
+                                    if (mounted && context.mounted) {
                                       Navigator.pop(context, selectedDay);
                                     }
                                   },
@@ -763,6 +759,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                           ),
                                           onPressed: () async {
                                             Navigator.pop(c);
+                                            final ctx = context;
                                             await FirebaseDatabase.instance
                                                 .ref('reservations')
                                                 .push()
@@ -796,9 +793,9 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                                 'duration': displayDateRange,
                                               },
                                             );
-                                            if (mounted) {
+                                            if (mounted && ctx.mounted) {
                                               showDialog(
-                                                context: context,
+                                                context: ctx,
                                                 barrierDismissible: false,
                                                 builder: (c2) => AlertDialog(
                                                   backgroundColor: const Color(

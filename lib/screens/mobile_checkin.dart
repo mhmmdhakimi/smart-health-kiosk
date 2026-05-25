@@ -2,6 +2,7 @@ import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../widgets/shimmer_loading.dart';
 
 class MobileCheckInPage extends StatefulWidget {
   final String kioskId;
@@ -37,7 +38,9 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
           return;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Session check failed: $e');
+    }
     
     if (mounted) setState(() { _isValidSession = false; _isLoading = false; });
   }
@@ -109,7 +112,41 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(backgroundColor: Color(0xFFF4F9FF), body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F9FF),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ShimmerLoading(
+                baseColor: const Color(0xFFDDE8F5),
+                highlightColor: const Color(0xFFEEF4FF),
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDDE8F5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ShimmerLoading(
+                baseColor: const Color(0xFFDDE8F5),
+                highlightColor: const Color(0xFFEEF4FF),
+                child: Container(
+                  width: 180,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDDE8F5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (!_isValidSession) {
@@ -210,7 +247,16 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF133F85), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                     onPressed: _isProcessing ? null : _submit,
-                    child: _isProcessing ? const CircularProgressIndicator(color: Colors.white) : const Text("CHECK IN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: _isProcessing
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Text("CHECK IN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 20),

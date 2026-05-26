@@ -22,6 +22,7 @@ void main() async {
         DeviceOrientation.landscapeRight,
         DeviceOrientation.landscapeLeft,
       ]);
+      // Hide Navigation & Status Bar
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } catch (e) {
       debugPrint('Failed to set SystemUI mode: $e');
@@ -31,10 +32,10 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Start global monitors AFTER Firebase is ready so Firebase streams work.
-  NetworkMonitor().startMonitoring();
-  HardwareMonitor().startMonitoring();
+  NetworkMonitor().startMonitoring(); // Check wifi connection
+  HardwareMonitor().startMonitoring(); // Check hardware connection
 
-  runApp(const SmartHealthKioskApp());
+  runApp(const SmartHealthKioskApp()); //render the app
 }
 
 class SmartHealthKioskApp extends StatelessWidget {
@@ -50,8 +51,12 @@ class SmartHealthKioskApp extends StatelessWidget {
           seedColor: const Color(0xFF133F85),
           brightness: Brightness.dark,
           primary: const Color(0xFF133F85),
-          secondary: const Color(0xFF0EA5E9), // sky-blue accent (replaces cyanAccent)
-          tertiary: const Color(0xFFA855F7),  // purple accent (matches dashboard)
+          secondary: const Color(
+            0xFF0EA5E9,
+          ), // sky-blue accent (replaces cyanAccent)
+          tertiary: const Color(
+            0xFFA855F7,
+          ), // purple accent (matches dashboard)
           surface: const Color(0xFF133F85),
           onSurface: Colors.white,
         ),

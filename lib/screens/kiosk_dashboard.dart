@@ -437,7 +437,6 @@ class _KioskDashboardState extends State<KioskDashboard> {
                             : 'RUNDINGAN\nPERUBATAN',
                         onTap: () =>
                             setState(() => _currentView = "SEE_DOCTOR_OPT"),
-                        isRestricted: widget.isGuest,
                       ),
                     ),
                     const SizedBox(width: 25),
@@ -461,21 +460,12 @@ class _KioskDashboardState extends State<KioskDashboard> {
                   children: [
                     Expanded(
                       child: _buildBentoCard(
-                        icon: widget.isGuest
-                            ? Icons.directions_walk_outlined
-                            : Icons.history_outlined,
-                        title: widget.isGuest
-                            ? (widget.isEnglish
-                                  ? 'WALK-IN'
-                                  : 'WALK-IN (TIDAK\nBERJADUAL)')
-                            : (widget.isEnglish
-                                  ? 'HEALTH RECORD'
-                                  : 'REKOD KESIHATAN'),
-                        onTap: () => setState(
-                          () => _currentView = widget.isGuest
-                              ? "WALK_IN_TRIAGE"
-                              : "CHECKUP_HIST",
-                        ),
+                        icon: Icons.history_outlined,
+                        title: widget.isEnglish
+                            ? 'HEALTH RECORD'
+                            : 'REKOD KESIHATAN',
+                        onTap: () => setState(() => _currentView = "CHECKUP_HIST"),
+                        isRestricted: widget.isGuest,
                       ),
                     ),
                     const SizedBox(width: 25),

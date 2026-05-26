@@ -59,6 +59,50 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     if (result == "HOME" && mounted) widget.onBack();
   }
 
+  void _showDisabledDialog({required String title, required String message, required IconData icon, required Color color}) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: const Color(0xFF0D1B3E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: color.withValues(alpha: 0.6), width: 1.5),
+        ),
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: 30),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.5),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color.withValues(alpha: 0.15),
+              foregroundColor: color,
+              side: BorderSide(color: color.withValues(alpha: 0.5)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(c),
+            child: Text(
+              widget.isEnglish ? "OK, UNDERSTOOD" : "OK, FAHAM",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -115,20 +159,36 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
                       onTap: widget.onWalkIn,
                     ),
                   ),
-                  if (!widget.isGuest) ...[
-                    const SizedBox(width: 60),
-                    SizedBox(
-                      width: 320,
-                      height: 300,
-                      child: _GlassBentoCard(
-                        title: widget.isEnglish
-                            ? "SCHEDULE\nAPPOINTMENT"
-                            : "JADUAL\nTEMU JANJI",
-                        icon: Icons.calendar_month_rounded,
-                        onTap: _navigateToAppointment,
-                      ),
-                    ),
-                  ],
+                  const SizedBox(width: 60),
+                  SizedBox(
+                    width: 320,
+                    height: 300,
+                    child: widget.isGuest
+                        ? Opacity(
+                            opacity: 0.45,
+                            child: _GlassBentoCard(
+                              title: widget.isEnglish
+                                  ? "SCHEDULE\nAPPOINTMENT"
+                                  : "JADUAL\nTEMU JANJI",
+                              icon: Icons.calendar_month_rounded,
+                              onTap: () => _showDisabledDialog(
+                                title: widget.isEnglish ? 'Access Restricted' : 'Akses Terhad',
+                                message: widget.isEnglish
+                                    ? 'This feature requires an official UniMAP Student Account.\n\nPlease scan your Student ID card at the login portal to continue.'
+                                    : 'Ciri ini memerlukan Akaun Pelajar UniMAP rasmi.\n\nSila imbas kad ID pelajar anda di portal log masuk untuk meneruskan.',
+                                icon: Icons.lock_outline_rounded,
+                                color: Colors.lightBlueAccent,
+                              ),
+                            ),
+                          )
+                        : _GlassBentoCard(
+                            title: widget.isEnglish
+                                ? "SCHEDULE\nAPPOINTMENT"
+                                : "JADUAL\nTEMU JANJI",
+                            icon: Icons.calendar_month_rounded,
+                            onTap: _navigateToAppointment,
+                          ),
+                  ),
                 ],
               ),
             ],

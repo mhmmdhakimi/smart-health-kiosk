@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/email_service.dart';
+import '../core/config.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class EquipmentScreen extends StatefulWidget {
@@ -782,7 +783,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                                       ServerValue.timestamp,
                                                 });
                                             await sendEmailJSEmail(
-                                              templateId: 'template_aaoznaf',
+                                              templateId: AppConfig.emailJsTemplateId1,
                                               templateParams: {
                                                 'to_email':
                                                     "s${widget.userId}@studentmail.unimap.edu.my",

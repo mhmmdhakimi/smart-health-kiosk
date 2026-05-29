@@ -18,12 +18,12 @@ class DefaultFirebaseOptions {
     projectId: "smart-health-kiosk-193a5",
     storageBucket: "smart-health-kiosk-193a5.firebasestorage.app",
     messagingSenderId: "74365494988",
-    appId: "1:74365494988:web:977ee83752dbb8b7ca4469"
+    appId: AppConfig.firebaseAppId
   );
 
   static FirebaseOptions get android => FirebaseOptions(
     apiKey: AppConfig.firebaseApiKey,
-    appId: "1:74365494988:android:977ee83752dbb8b7ca4469",
+    appId: AppConfig.firebaseAppId,
     messagingSenderId: "74365494988",
     projectId: "smart-health-kiosk-193a5",
     databaseURL: "https://smart-health-kiosk-193a5-default-rtdb.asia-southeast1.firebasedatabase.app",

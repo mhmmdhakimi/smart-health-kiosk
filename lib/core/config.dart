@@ -1,6 +1,10 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConfig {
-  // These will be passed during build/run using --dart-define
-  static const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY', defaultValue: 'AIzaSyB0t88bvV3eTZoGLqt3_DOp4AXjwEYTlW4');
-  static const String emailJsPublicKey = String.fromEnvironment('EMAILJS_PUBLIC_KEY', defaultValue: '73WBQxNlkGUqMf2r9');
-  static const String emailJsServiceId = String.fromEnvironment('EMAILJS_SERVICE_ID', defaultValue: 'service_f3mmtjj');
+  static String get firebaseApiKey => dotenv.env['FIREBASE_API_KEY']!;
+  static String get firebaseAppId => dotenv.env['FIREBASE_APP_ID']!;
+  static String get emailJsPublicKey => dotenv.env['EMAILJS_PUBLIC_KEY']!;
+  static String get emailJsServiceId => dotenv.env['EMAILJS_SERVICE_ID']!;
+  static String get emailJsTemplateId1 => dotenv.env['EMAILJS_TEMPLATE_ID1']!;
+  static String get emailJsTemplateId2 => dotenv.env['EMAILJS_TEMPLATE_ID2']!;
 }

@@ -45,6 +45,7 @@ dependencies:
   intl: ^0.20.2
   table_calendar: ^3.1.2
   connectivity_plus: ^7.1.1
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutterfire_cli: any
@@ -63,6 +64,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - .env
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

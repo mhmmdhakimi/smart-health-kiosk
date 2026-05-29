@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/email_service.dart';
+import '../core/config.dart';
 
 class AppointmentPage extends StatefulWidget {
   final String userName;
@@ -314,7 +315,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
 
     String recipientEmail = "s${widget.userId}@studentmail.unimap.edu.my";
     await sendEmailJSEmail(
-      templateId: 'template_lt0jtlj',
+      templateId: AppConfig.emailJsTemplateId2,
       templateParams: {
         'to_email': recipientEmail,
         'patient_name': widget.userName,

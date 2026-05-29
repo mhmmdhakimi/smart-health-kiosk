@@ -8,12 +8,13 @@ import 'screens/language_selection.dart';
 import 'screens/mobile_checkin.dart';
 import 'utils/network_monitor.dart';
 import 'utils/hardware_monitor.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // KIOSK MODE: Force Landscape & Immersive Fullscreen
-  // Ensure these are only called on supported platforms (Android/iOS) to prevent exceptions on Desktop/Web
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {

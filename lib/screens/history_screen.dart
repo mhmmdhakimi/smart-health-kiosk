@@ -90,7 +90,10 @@ class HistoryScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: child,
+          child: Material(
+            color: Colors.transparent,
+            child: child,
+          ),
         ),
       ),
     );

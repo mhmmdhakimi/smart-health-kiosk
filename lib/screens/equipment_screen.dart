@@ -192,16 +192,19 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                       itemCount: options.length,
                       itemBuilder: (context, index) {
                         final option = options[index];
-                        return ListTile(
-                          title: Text(
-                            option,
-                            style: const TextStyle(color: Colors.white),
+                        return Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            title: Text(
+                              option,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            tileColor: Colors.white.withValues(alpha: 0.02),
+                            onTap: () {
+                              onSelected(option);
+                              Navigator.pop(context);
+                            },
                           ),
-                          tileColor: Colors.white.withValues(alpha: 0.02),
-                          onTap: () {
-                            onSelected(option);
-                            Navigator.pop(context);
-                          },
                         );
                       },
                     ),
@@ -346,8 +349,8 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                   color: Colors.lightBlueAccent,
                                   fontWeight: FontWeight.bold,
                                 ),
-                                selectedDecoration: BoxDecoration(
-                                  gradient: const LinearGradient(
+                                selectedDecoration: const BoxDecoration(
+                                  gradient: LinearGradient(
                                     colors: [
                                       Color(0xFF0EA5E9),
                                       Color(0xFF1B64F2),
@@ -355,8 +358,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  shape: BoxShape.rectangle,
+                                  shape: BoxShape.circle,
                                 ),
                                 selectedTextStyle: const TextStyle(
                                   fontSize: 24,

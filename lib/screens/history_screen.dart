@@ -60,12 +60,15 @@ class HistoryScreen extends StatelessWidget {
         status == "WAITING" ||
         status == "Waiting" ||
         status == "Pending") {
-      return Colors.amber;
+      return Colors.lightBlueAccent;
     }
     if (status == "Approved" ||
         status == "COMPLETED" ||
         status == "Completed") {
-      return Colors.lightBlueAccent;
+      return Colors.green;
+    }
+    if (status == "Missed" || status == "missed") {
+      return Colors.amber;
     }
     if (status == "Cancelled" || status == "Overdue" || status == "Expired") {
       return Colors.redAccent;
@@ -190,7 +193,6 @@ class HistoryScreen extends StatelessWidget {
 
   Widget _buildActiveCard(Map<String, dynamic> appointment) {
     String dept = appointment['department'] ?? 'Clinic';
-    String doctor = appointment['doctor'] ?? 'Unassigned';
     String reason = appointment['reason'] ?? 'General Checkup';
     DateTime dt = appointment['parsedDateTime'] as DateTime;
     String dateStr = DateFormat('dd MMM yyyy').format(dt);
@@ -250,24 +252,6 @@ class HistoryScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person_outline,
-                            color: Colors.white54,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            doctor,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(
@@ -339,7 +323,6 @@ class HistoryScreen extends StatelessWidget {
 
   Widget _buildPastCard(Map<String, dynamic> appointment) {
     String dept = appointment['department'] ?? 'Clinic';
-    String doctor = appointment['doctor'] ?? 'Unassigned';
     String notes = appointment['notes'] ?? '';
     String status = (appointment['status'] ?? '').toString().toLowerCase();
 
@@ -348,8 +331,9 @@ class HistoryScreen extends StatelessWidget {
     String timeStr = DateFormat('hh:mm a').format(dt);
 
     bool isCancelled = status == 'cancelled';
-    Color statusColor = isCancelled ? Colors.redAccent : Colors.grey;
-    String statusText = isCancelled ? "CANCELLED" : "COMPLETED";
+    bool isMissed = status == 'missed';
+    Color statusColor = isCancelled ? Colors.redAccent : (isMissed ? Colors.amber : Colors.green);
+    String statusText = isCancelled ? "CANCELLED" : (isMissed ? "MISSED" : "COMPLETED");
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -384,30 +368,6 @@ class HistoryScreen extends StatelessWidget {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.only(left: 10),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                left: BorderSide(
-                                  color: Colors.white24,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Dr. $doctor",
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ],
@@ -492,6 +452,7 @@ class HistoryScreen extends StatelessWidget {
     int upcomingCount = 0;
     int completedCount = 0;
     int cancelledCount = 0;
+    int missedCount = 0;
 
     List<Map<String, dynamic>> activeBookingsList = [];
     List<Map<String, dynamic>> pastHistoryList = [];
@@ -522,6 +483,9 @@ class HistoryScreen extends StatelessWidget {
 
       if (status == 'cancelled') {
         cancelledCount++;
+        pastHistoryList.add(appointment);
+      } else if (status == 'missed') {
+        missedCount++;
         pastHistoryList.add(appointment);
       } else if (status == 'completed') {
         completedCount++;
@@ -568,6 +532,13 @@ class HistoryScreen extends StatelessWidget {
                 isEnglish ? "Completed" : "Selesai",
                 Icons.check_circle_outline_rounded,
                 Colors.green,
+              ),
+              const SizedBox(height: 15),
+              _buildBadge(
+                missedCount.toString(),
+                isEnglish ? "Missed" : "Tidak Hadir",
+                Icons.event_busy_outlined,
+                Colors.amber,
               ),
               const SizedBox(height: 15),
               _buildBadge(

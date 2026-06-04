@@ -1,4 +1,4 @@
-﻿import '../utils/no_anim_route.dart';
+import '../utils/no_anim_route.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -11,6 +11,7 @@ class SelfCheckupScreen extends StatefulWidget {
   final String userId;
   final String userName;
   final bool isEnglish;
+  final String kioskId;
   final VoidCallback onBack;
   final Function(bool) onStateChanged;
 
@@ -19,6 +20,7 @@ class SelfCheckupScreen extends StatefulWidget {
     required this.userId,
     required this.userName,
     required this.isEnglish,
+    required this.kioskId,
     required this.onBack,
     required this.onStateChanged,
   });
@@ -69,16 +71,16 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
     widget.onStateChanged(true);
 
     await FirebaseDatabase.instance
-        .ref('kiosk_control/checkup_phase')
+        .ref('kiosk/${widget.kioskId}/checkup_phase')
         .set("WAIT_PERSON");
     await FirebaseDatabase.instance
-        .ref('kiosk_control/session_active')
+        .ref('kiosk/${widget.kioskId}/session_active')
         .set(true);
-    await FirebaseDatabase.instance.ref('kiosk_control/scan_percentage').set(0);
+    await FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scan_percentage').set(0);
 
     _phaseSub?.cancel();
     _phaseSub = FirebaseDatabase.instance
-        .ref('kiosk_control/checkup_phase')
+        .ref('kiosk/${widget.kioskId}/checkup_phase')
         .onValue
         .listen((event) {
           if (event.snapshot.exists && mounted) {
@@ -88,7 +90,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
 
     _percentSub?.cancel();
     _percentSub = FirebaseDatabase.instance
-        .ref('kiosk_control/scan_percentage')
+        .ref('kiosk/${widget.kioskId}/scan_percentage')
         .onValue
         .listen((event) {
           if (event.snapshot.exists && mounted) {
@@ -101,7 +103,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
 
     _sessionSub?.cancel();
     _sessionSub = FirebaseDatabase.instance
-        .ref('kiosk_control/session_active')
+        .ref('kiosk/${widget.kioskId}/session_active')
         .onValue
         .listen((event) async {
           if (event.snapshot.exists && event.snapshot.value == false) {
@@ -1087,7 +1089,7 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                       _phaseSub?.cancel();
                       _percentSub?.cancel();
                       FirebaseDatabase.instance
-                          .ref('kiosk_control/session_active')
+                          .ref('kiosk/${widget.kioskId}/session_active')
                           .set(false);
                       widget.onStateChanged(false);
                       widget.onBack();

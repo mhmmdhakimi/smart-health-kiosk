@@ -189,6 +189,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
           userId: widget.userId,
           userName: widget.userName,
           isEnglish: widget.isEnglish,
+          kioskId: widget.kioskId,
           onBack: () => setState(() => _currentView = "HOME"),
           onStateChanged: (isActive) {
             setState(() => _isCheckupActive = isActive);
@@ -424,8 +425,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
                             : 'PEMERIKSAAN\nKENDIRI',
                         onTap: () =>
                             setState(() => _currentView = "SELF_CHECKUP"),
-                        // Self-checkup needs hardware to be functional
-                        isHardwareDependent: true,
+                        // Hardware gate removed - ESP32 manages its own state.
+                        // The top bar indicator still shows hardware status visually.
                       ),
                     ),
                     const SizedBox(width: 25),

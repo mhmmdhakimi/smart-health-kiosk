@@ -261,7 +261,12 @@ class _KioskDashboardState extends State<KioskDashboard> {
   }
 
   // ── Disabled reason enum ──────────────────────────────────────────────────
-  void _showDisabledDialog({required String title, required String message, required IconData icon, required Color color}) {
+  void _showDisabledDialog({
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color color,
+  }) {
     showDialog(
       context: context,
       builder: (c) => AlertDialog(
@@ -277,14 +282,22 @@ class _KioskDashboardState extends State<KioskDashboard> {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
             ),
           ],
         ),
         content: Text(
           message,
-          style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.5),
+          style: const TextStyle(
+            fontSize: 15,
+            color: Colors.white70,
+            height: 1.5,
+          ),
         ),
         actions: [
           ElevatedButton(
@@ -292,7 +305,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
               backgroundColor: color.withValues(alpha: 0.15),
               foregroundColor: color,
               side: BorderSide(color: color.withValues(alpha: 0.5)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () => Navigator.pop(c),
             child: Text(
@@ -332,7 +347,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
           onTap: () => _showDisabledDialog(
             icon: Icons.sensors_off_rounded,
             color: Colors.orangeAccent,
-            title: widget.isEnglish ? 'Hardware Offline' : 'Perkakasan Tidak Aktif',
+            title: widget.isEnglish
+                ? 'Hardware Offline'
+                : 'Perkakasan Tidak Aktif',
             message: widget.isEnglish
                 ? 'The health scanning hardware is currently offline or not responding.\n\nPlease wait for the hardware to reconnect, or contact clinic staff for assistance.'
                 : 'Perkakasan imbasan kesihatan sedang tidak aktif atau tidak bertindak balas.\n\nSila tunggu sehingga perkakasan disambung semula, atau hubungi kakitangan klinik untuk bantuan.',
@@ -465,7 +482,8 @@ class _KioskDashboardState extends State<KioskDashboard> {
                         title: widget.isEnglish
                             ? 'HEALTH RECORD'
                             : 'REKOD KESIHATAN',
-                        onTap: () => setState(() => _currentView = "CHECKUP_HIST"),
+                        onTap: () =>
+                            setState(() => _currentView = "CHECKUP_HIST"),
                         isRestricted: widget.isGuest,
                       ),
                     ),
@@ -574,7 +592,9 @@ class _KioskDashboardState extends State<KioskDashboard> {
               ),
               const SizedBox(width: 12),
               Text(
-                widget.isEnglish ? 'Attempting to reconnect...' : 'Cuba menyambung semula...',
+                widget.isEnglish
+                    ? 'Attempting to reconnect...'
+                    : 'Cuba menyambung semula...',
                 style: const TextStyle(
                   color: Colors.redAccent,
                   fontSize: 14,
@@ -604,7 +624,11 @@ class _KioskDashboardState extends State<KioskDashboard> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.sensors_off_rounded, color: Colors.orangeAccent, size: 20),
+          const Icon(
+            Icons.sensors_off_rounded,
+            color: Colors.orangeAccent,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Text(
             widget.isEnglish
@@ -620,8 +644,6 @@ class _KioskDashboardState extends State<KioskDashboard> {
       ),
     );
   }
-
-
 
   Widget _buildTopBar() {
     return ClipRRect(
@@ -823,7 +845,6 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -834,7 +855,11 @@ class _GlassBentoCardState extends State<GlassBentoCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeInOut,
-        transform: Matrix4.diagonal3Values(_isPressed ? 0.98 : 1.0, _isPressed ? 0.98 : 1.0, 1.0),
+        transform: Matrix4.diagonal3Values(
+          _isPressed ? 0.98 : 1.0,
+          _isPressed ? 0.98 : 1.0,
+          1.0,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(

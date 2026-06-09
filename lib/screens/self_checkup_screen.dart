@@ -35,15 +35,25 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
   int _scanPercentage = 0;
 
   Map<dynamic, dynamic>? _latestCheckupData;
-  StreamSubscription<DatabaseEvent>? _sessionSub;
+  // _sessionSub removed — completion is now driven by /checkups onChildAdded
   StreamSubscription<DatabaseEvent>? _phaseSub;
   StreamSubscription<DatabaseEvent>? _percentSub;
+  StreamSubscription<DatabaseEvent>? _weightSub;   // Phase-1 completion trigger
+  StreamSubscription<DatabaseEvent>? _checkupSub;  // Completion trigger
+  DateTime? _sessionStartTime;                     // Guards against stale checkup records
 
   @override
   void dispose() {
-    _sessionSub?.cancel();
     _phaseSub?.cancel();
     _percentSub?.cancel();
+    _weightSub?.cancel();
+    _checkupSub?.cancel();
+    // Best-effort: reset hardware if the widget is torn down mid-session
+    if (_isCheckupActive) {
+      FirebaseDatabase.instance
+          .ref('kiosk/${widget.kioskId}/app_state')
+          .set("APP_IDLE");
+    }
     super.dispose();
   }
 
@@ -61,125 +71,182 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
       );
       return;
     }
+
     setState(() {
       _isCheckupActive = true;
       _latestCheckupData = null;
-      _currentPhase = "WAIT_PERSON";
+      _currentPhase = "INITIALIZING"; // Show initializing UI immediately, before ESP32 responds
       _scanPercentage = 0;
     });
-
     widget.onStateChanged(true);
 
+    // ── A. Reset stale sensor data & record server-aligned session start time ──
+    // We write a sentinel value to a dedicated node and read it back so that
+    // _sessionStartTime uses the Firebase SERVER clock, matching the
+    // server-side `timestamp` field the ESP32 writes into /checkups.
+    final sessionRef =
+        FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/session_start_ts');
+    await sessionRef.set(ServerValue.timestamp);
+    final tsSnap = await sessionRef.once();
+    if (tsSnap.snapshot.exists) {
+      _sessionStartTime = DateTime.fromMillisecondsSinceEpoch(
+          (tsSnap.snapshot.value as num).toInt());
+    } else {
+      _sessionStartTime = DateTime.now();
+    }
+
+    await FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/weight')
+        .set(0);
+    await FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/height')
+        .set(0);
+    await FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/scan_percentage')
+        .set(0);
+    // Clear stale checkup_phase from any previous session BEFORE attaching the
+    // listener. Without this, onValue fires immediately with the old "FINISHED"
+    // value, causing the "FINALIZING..." flash bug.
     await FirebaseDatabase.instance
         .ref('kiosk/${widget.kioskId}/checkup_phase')
-        .set("WAIT_PERSON");
-    await FirebaseDatabase.instance
-        .ref('kiosk/${widget.kioskId}/session_active')
-        .set(true);
-    await FirebaseDatabase.instance.ref('kiosk/${widget.kioskId}/scan_percentage').set(0);
+        .set("INITIALIZING");
 
+    // Command the hardware — this is the trigger the ESP32 polls.
+    await FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/app_state')
+        .set("APP_READY_WEIGHT");
+
+    // ── B. Phase label listener — hardware writes checkup_phase, UI follows ───
+    // ESP32 writes: WAIT_PERSON → STABILIZING → WAIT_FINGER → SCANNING → FINISHED
+    // Flutter mirrors these writes 1-to-1 so the step indicator stays in sync.
     _phaseSub?.cancel();
     _phaseSub = FirebaseDatabase.instance
         .ref('kiosk/${widget.kioskId}/checkup_phase')
         .onValue
         .listen((event) {
-          if (event.snapshot.exists && mounted) {
-            setState(() => _currentPhase = event.snapshot.value.toString());
+          if (!event.snapshot.exists || !mounted) return;
+          final phase = event.snapshot.value.toString();
+          // Accept all phases the ESP32 can write, plus our Flutter-only
+          // "INITIALIZING" phase that guards against the stale-value race.
+          if (["INITIALIZING", "WAIT_PERSON", "STABILIZING", "WAIT_FINGER",
+               "SCANNING", "FINISHED"].contains(phase)) {
+            setState(() => _currentPhase = phase);
           }
         });
 
+    // ── C. Scan-percentage listener — drives the progress bar ─────────────────
     _percentSub?.cancel();
     _percentSub = FirebaseDatabase.instance
         .ref('kiosk/${widget.kioskId}/scan_percentage')
         .onValue
         .listen((event) {
-          if (event.snapshot.exists && mounted) {
-            setState(
-              () => _scanPercentage =
-                  int.tryParse(event.snapshot.value.toString()) ?? 0,
-            );
+          if (!event.snapshot.exists || !mounted) return;
+          setState(() =>
+              _scanPercentage =
+                  int.tryParse(event.snapshot.value.toString()) ?? 0);
+        });
+
+    // ── D. Weight listener — Phase-1 done → command hardware to Phase 2 ───────
+    // The UI phase label is already driven by _phaseSub (hardware writes
+    // WAIT_FINGER to checkup_phase). This listener only issues the app_state
+    // command so the ESP32 knows Flutter has acknowledged Phase 1.
+    _weightSub?.cancel();
+    _weightSub = FirebaseDatabase.instance
+        .ref('kiosk/${widget.kioskId}/weight')
+        .onValue
+        .listen((event) async {
+          if (!event.snapshot.exists || !mounted) return;
+          final raw = event.snapshot.value;
+          final w = (raw is num)
+              ? raw.toDouble()
+              : double.tryParse(raw.toString()) ?? 0.0;
+          if (w > 0) {
+            _weightSub?.cancel(); // one-shot
+            // Command hardware to arm the optical sensor for Phase 2
+            await FirebaseDatabase.instance
+                .ref('kiosk/${widget.kioskId}/app_state')
+                .set("APP_READY_VITALS");
           }
         });
 
-    _sessionSub?.cancel();
-    _sessionSub = FirebaseDatabase.instance
-        .ref('kiosk/${widget.kioskId}/session_active')
-        .onValue
+    // ── E. Completion listener — fires when ESP32 pushes to /checkups ──────────
+    // IMPORTANT: attach AFTER all writes above so the subscription starts fresh.
+    // limitToLast(1) + onChildAdded fires immediately with the last existing
+    // record — the timestamp guard below discards it if it pre-dates this session.
+    _checkupSub?.cancel();
+    _checkupSub = FirebaseDatabase.instance
+        .ref('checkups')
+        .limitToLast(1)
+        .onChildAdded
         .listen((event) async {
-          if (event.snapshot.exists && event.snapshot.value == false) {
-            _sessionSub?.cancel();
+          if (!event.snapshot.exists || !mounted) return;
 
-            var query = await FirebaseDatabase.instance
+          final newKey = event.snapshot.key;
+          final newData =
+              Map<dynamic, dynamic>.from(event.snapshot.value as Map);
+
+          // ── Timestamp guard: reject stale records ───────────────────────────
+          // Firebase server timestamps are milliseconds-since-epoch integers.
+          // _sessionStartTime is aligned to the server clock via the round-trip
+          // above, so this comparison is reliable.
+          final rawTs = newData['timestamp'];
+          if (rawTs == null || _sessionStartTime == null) return;
+          final recordTime =
+              DateTime.fromMillisecondsSinceEpoch((rawTs as num).toInt());
+          if (!recordTime.isAfter(_sessionStartTime!)) return; // stale → ignore
+
+          // ── Valid new record — cancel all sensors listeners ─────────────────
+          _checkupSub?.cancel();
+          _weightSub?.cancel();
+          _percentSub?.cancel();
+          _phaseSub?.cancel();
+
+          double weight = ((newData['weight'] ?? 0) as num).toDouble();
+          double height = ((newData['height'] ?? 0) as num).toDouble();
+          double temp = ((newData['temp'] ?? 0) as num).toDouble();
+          double bmi =
+              height > 0 ? weight / ((height / 100) * (height / 100)) : 0;
+          int heartRate = ((newData['heart_rate'] ?? 0) as num).toInt();
+          int spo2 = ((newData['spo2'] ?? 0) as num).toInt();
+
+          final todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+          final todayTime = DateFormat('hh:mm a').format(DateTime.now());
+
+          try {
+            await FirebaseDatabase.instance
                 .ref('checkups')
-                .orderByChild('timestamp')
-                .limitToLast(1)
-                .once();
-            if (query.snapshot.exists) {
-              var map = query.snapshot.value as Map<dynamic, dynamic>;
-              var newKey = map.keys.first;
-              var newData = map[newKey] as Map<dynamic, dynamic>;
-
-              double weight = (newData['weight'] ?? 0).toDouble();
-              double height = (newData['height'] ?? 0).toDouble();
-              double temp = (newData['temp'] ?? 0).toDouble();
-              double bmi = height > 0
-                  ? weight / ((height / 100) * (height / 100))
-                  : 0;
-
-              int heartRate = (newData['heart_rate'] ?? 0).toInt();
-              int spo2 = (newData['spo2'] ?? 0).toInt();
-
-              String todayDate = DateFormat(
-                'yyyy-MM-dd',
-              ).format(DateTime.now());
-              String todayTime = DateFormat('hh:mm a').format(DateTime.now());
-
-              await FirebaseDatabase.instance
-                  .ref('checkups')
-                  .child(newKey.toString())
-                  .update({
-                    'patient_id': widget.userId,
-                    'patient_name': widget.userName.toUpperCase(),
-                    'date': todayDate,
-                    'time': todayTime,
-                    'bmi': double.parse(bmi.toStringAsFixed(2)),
-                    'weight': double.parse(weight.toStringAsFixed(2)),
-                    'height': double.parse(height.toStringAsFixed(2)),
-                    'temp': double.parse(temp.toStringAsFixed(1)),
-                  });
-
-              newData['date'] = todayDate;
-              newData['time'] = todayTime;
-              newData['bmi'] = bmi;
-              newData['heart_rate'] = heartRate;
-              newData['spo2'] = spo2;
-
-              if (mounted) {
-                setState(() {
-                  _isCheckupActive = false;
-                  _latestCheckupData = newData;
+                .child(newKey.toString())
+                .update({
+                  'patient_id': widget.userId,
+                  'patient_name': widget.userName.toUpperCase(),
+                  'date': todayDate,
+                  'time': todayTime,
+                  'bmi': double.parse(bmi.toStringAsFixed(2)),
+                  'weight': double.parse(weight.toStringAsFixed(2)),
+                  'height': double.parse(height.toStringAsFixed(2)),
+                  'temp': double.parse(temp.toStringAsFixed(1)),
                 });
-                _phaseSub?.cancel();
-                _percentSub?.cancel();
-                widget.onStateChanged(false);
-              }
-            } else {
-              if (mounted) {
-                setState(() => _isCheckupActive = false);
-                _phaseSub?.cancel();
-                _percentSub?.cancel();
-                widget.onStateChanged(false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      widget.isEnglish
-                          ? "Error retrieving data."
-                          : "Ralat mengambil data.",
-                    ),
-                  ),
-                );
-              }
-            }
+          } catch (e) {
+            debugPrint('[Checkup] Failed to update patient record: $e');
+          }
+
+          newData['date'] = todayDate;
+          newData['time'] = todayTime;
+          newData['bmi'] = bmi;
+          newData['heart_rate'] = heartRate;
+          newData['spo2'] = spo2;
+
+          // Lock the hardware — ESP32 enters STATE_IDLE on next poll
+          await FirebaseDatabase.instance
+              .ref('kiosk/${widget.kioskId}/app_state')
+              .set("APP_IDLE");
+
+          if (mounted) {
+            setState(() {
+              _isCheckupActive = false;
+              _latestCheckupData = newData;
+            });
+            widget.onStateChanged(false);
           }
         });
   }
@@ -247,7 +314,14 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
     String instructions = "";
     IconData icon = Icons.monitor_heart;
 
-    if (_currentPhase == "WAIT_PERSON") {
+    if (_currentPhase == "INITIALIZING") {
+      activeStep = -1; // No step is active yet — scanner is initializing
+      title = widget.isEnglish ? "INITIALIZING SCANNER" : "MEMULAKAN PENGIMBAS";
+      instructions = widget.isEnglish
+          ? "Preparing the scanner. Please ensure nothing is on the platform."
+          : "Menyediakan pengimbas. Sila pastikan tiada apa-apa di atas platform.";
+      icon = Icons.settings_input_component_rounded;
+    } else if (_currentPhase == "WAIT_PERSON") {
       activeStep = 0;
       title = widget.isEnglish ? "STEP INTO THE KIOSK" : "MASUK KE DALAM KIOSK";
       instructions = widget.isEnglish
@@ -526,11 +600,33 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
         : Colors.lightBlue.withValues(alpha: 0.3);
     Color glowColor = isUnhealthy ? Colors.amber : Colors.lightBlue;
 
+    // ── BMI classification (WHO standard) ──────────────────────────────────
+    String bmiCategory;
+    Color bmiColor;
+    if (bmi <= 0) {
+      bmiCategory = "N/A";
+      bmiColor = Colors.white38;
+    } else if (bmi < 18.5) {
+      bmiCategory = widget.isEnglish ? "Underweight" : "Berat Badan Kurang";
+      bmiColor = Colors.amber;
+    } else if (bmi < 25.0) {
+      bmiCategory = widget.isEnglish ? "Normal" : "Normal";
+      bmiColor = Colors.greenAccent;
+    } else if (bmi < 30.0) {
+      bmiCategory = widget.isEnglish ? "Overweight" : "Berat Badan Berlebihan";
+      bmiColor = Colors.orange;
+    } else {
+      bmiCategory = widget.isEnglish ? "Obese" : "Obes";
+      bmiColor = Colors.redAccent;
+    }
+
     double score = 100;
     if (temp >= 37.5) score -= 15;
     if (temp < 36.1) score -= 5;
     if (spo2 > 0 && spo2 < 95) score -= 15;
     if (heartRate > 0 && (heartRate < 60 || heartRate > 100)) score -= 10;
+    // BMI outside healthy range affects overall score
+    if (bmi > 0 && (bmi < 18.5 || bmi >= 25.0)) score -= 5;
     score = score.clamp(0, 100);
 
     return Center(
@@ -668,11 +764,70 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                         flex: 2,
                         child: Column(
                           children: [
-                            _buildMiniBentoCard(
-                              "BMI",
-                              bmi.toStringAsFixed(1),
-                              "",
-                              Colors.white,
+                            // BMI card with category badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 15),
+                              decoration: BoxDecoration(
+                                color: bmiColor.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: bmiColor.withValues(alpha: 0.35)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        "BMI",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white54,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                      Text(
+                                        bmi.toStringAsFixed(1),
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: bmiColor,
+                                          fontFamily: 'monospace',
+                                          shadows: [
+                                            Shadow(
+                                              color: bmiColor
+                                                  .withValues(alpha: 0.4),
+                                              blurRadius: 8,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: bmiColor.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      bmiCategory.toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: bmiColor,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 15),
                             _buildMiniBentoCard(
@@ -1085,12 +1240,14 @@ class _SelfCheckupScreenState extends State<SelfCheckupScreen> {
                   padding: const EdgeInsets.only(top: 20, left: 20),
                   child: TextButton.icon(
                     onPressed: () {
-                      _sessionSub?.cancel();
                       _phaseSub?.cancel();
                       _percentSub?.cancel();
+                      _weightSub?.cancel();
+                      _checkupSub?.cancel();
+                      // Abort any active hardware scan immediately
                       FirebaseDatabase.instance
-                          .ref('kiosk/${widget.kioskId}/session_active')
-                          .set(false);
+                          .ref('kiosk/${widget.kioskId}/app_state')
+                          .set("APP_IDLE");
                       widget.onStateChanged(false);
                       widget.onBack();
                     },

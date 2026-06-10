@@ -214,7 +214,7 @@ class _GuestQrPageState extends State<GuestQrPage>
 
   @override
   Widget build(BuildContext context) {
-    const String webAppUrl = 'https://smart-health-kiosk-193a5.web.app';
+    const String webAppUrl = 'https://smart-health-kiosk-guest.web.app';
     final String qrData =
         '$webAppUrl/#/checkin?kioskId=$kioskId&session=$_sessionId';
 

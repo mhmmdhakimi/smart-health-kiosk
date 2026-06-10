@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "smart-health-kiosk-193a5"
-  }
+  },
+  "targets": {
+    "smart-health-kiosk-193a5": {
+      "hosting": {
+        "kiosk_app": [
+          "smart-health-kiosk-193a5"
+        ],
+        "guest_app": [
+          "smart-health-kiosk-guest"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

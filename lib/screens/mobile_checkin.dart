@@ -32,8 +32,12 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
     try {
       var snapshot = await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').once();
       if (snapshot.snapshot.exists) {
-        var data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        var data = Map<dynamic, dynamic>.from(snapshot.snapshot.value as Map);
         if (data['session'] == widget.sessionId && data['status'] == 'waiting') {
+          // Mark as 'opened' immediately so any reload shows Expired
+          await FirebaseDatabase.instance
+              .ref('pending_registrations/${widget.kioskId}')
+              .update({'status': 'opened'});
           if (mounted) setState(() { _isValidSession = true; _isLoading = false; });
           return;
         }
@@ -70,8 +74,10 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
     try {
       var snapshot = await FirebaseDatabase.instance.ref('pending_registrations/${widget.kioskId}').once();
       if (snapshot.snapshot.exists) {
-        var data = snapshot.snapshot.value as Map<dynamic, dynamic>;
-        if (data['session'] != widget.sessionId || data['status'] != 'waiting') {
+        var data = Map<dynamic, dynamic>.from(snapshot.snapshot.value as Map);
+        // Accept 'opened' status (set on first load) — 'waiting' is a fallback
+        final validStatuses = ['waiting', 'opened'];
+        if (data['session'] != widget.sessionId || !validStatuses.contains(data['status'])) {
           setState(() {
             _isValidSession = false;
             _isProcessing = false;
@@ -201,18 +207,33 @@ class _MobileCheckInPageState extends State<MobileCheckInPage> {
                 TextField(
                   controller: _nameCtrl, 
                   textCapitalization: TextCapitalization.characters,
+                  // Explicit black text so it's visible on the white form background
+                  // (the app's dark theme defaults TextField text to white)
+                  style: const TextStyle(color: Colors.black87),
                   inputFormatters: [
                     TextInputFormatter.withFunction((oldValue, newValue) => TextEditingValue(text: newValue.text.toUpperCase(), selection: newValue.selection))
                   ],
-                  decoration: const InputDecoration(labelText: "Full Name", border: OutlineInputBorder(), prefixIcon: Icon(Icons.person))
+                  decoration: const InputDecoration(
+                    labelText: "Full Name",
+                    labelStyle: TextStyle(color: Colors.blueGrey),
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person, color: Color(0xFF133F85)),
+                  ),
                 ),
                 const SizedBox(height: 15),
                 TextField(
                   controller: _phoneCtrl, 
                   keyboardType: TextInputType.number, 
                   maxLength: 11,
+                  style: const TextStyle(color: Colors.black87),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(labelText: "Phone Number", border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone), counterText: "")
+                  decoration: const InputDecoration(
+                    labelText: "Phone Number",
+                    labelStyle: TextStyle(color: Colors.blueGrey),
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone, color: Color(0xFF133F85)),
+                    counterText: "",
+                  ),
                 ),
                 const SizedBox(height: 15),
                 Row(

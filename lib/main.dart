@@ -12,7 +12,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  // Only load .env on native platforms — flutter build web does not bundle assets the same way
+  if (!kIsWeb) {
+    await dotenv.load(fileName: ".env");
+  }
 
   // KIOSK MODE: Force Landscape & Immersive Fullscreen
   if (!kIsWeb &&
@@ -103,7 +106,38 @@ class SmartHealthKioskApp extends StatelessWidget {
             page: MobileCheckInPage(kioskId: kioskId, sessionId: sessionId),
           );
         }
-        // Default to the kiosk welcome screen
+        // Default: native kiosk device → show language selection
+        // Web root URL (no /checkin route) → show a friendly message
+        if (kIsWeb) {
+          return NoAnimRoute(
+            settings: settings,
+            page: Scaffold(
+              backgroundColor: const Color(0xFFF4F9FF),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.qr_code_scanner, size: 80, color: Color(0xFF133F85)),
+                      SizedBox(height: 24),
+                      Text(
+                        "Guest Check-In",
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF133F85)),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        "Please scan the QR code at the kiosk to begin.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         return NoAnimRoute(
           settings: settings,
           page: const LanguageSelectionPage(),

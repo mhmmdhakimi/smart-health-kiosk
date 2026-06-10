@@ -133,7 +133,7 @@ class _WalkInScreenState extends State<WalkInScreen> {
       }
     }
     _generateWalkInTicket(
-      name: widget.isGuest ? "GUEST" : widget.userName,
+      name: widget.userName,
       id: widget.userId,
       reason: reason,
       phone: widget.guestPhone,

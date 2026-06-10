@@ -442,8 +442,7 @@ class _KioskDashboardState extends State<KioskDashboard> {
                             : 'PEMERIKSAAN\nKENDIRI',
                         onTap: () =>
                             setState(() => _currentView = "SELF_CHECKUP"),
-                        // Hardware gate removed - ESP32 manages its own state.
-                        // The top bar indicator still shows hardware status visually.
+                        isHardwareDependent: true, // Grayed out when scanner/sensors are offline
                       ),
                     ),
                     const SizedBox(width: 25),

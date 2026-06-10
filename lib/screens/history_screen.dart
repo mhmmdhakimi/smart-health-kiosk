@@ -41,13 +41,10 @@ class HistoryScreen extends StatelessWidget {
           const Spacer(),
           Text(
             val,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
-              color: color,
+              color: Colors.white54,
               fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10),
-              ],
             ),
           ),
         ],
@@ -65,15 +62,15 @@ class HistoryScreen extends StatelessWidget {
     if (status == "Approved" ||
         status == "COMPLETED" ||
         status == "Completed") {
-      return Colors.green;
+      return const Color.fromARGB(255, 3, 245, 23);
     }
     if (status == "Missed" || status == "missed") {
-      return Colors.amber;
+      return const Color.fromARGB(255, 255, 0, 0);
     }
     if (status == "Cancelled" || status == "Overdue" || status == "Expired") {
-      return Colors.redAccent;
+      return const Color.fromARGB(255, 250, 0, 0);
     }
-    if (status == "Returned") return const Color(0xFF1B64F2);
+    if (status == "Returned") return const Color.fromARGB(255, 3, 245, 23);
     return Colors.white70;
   }
 
